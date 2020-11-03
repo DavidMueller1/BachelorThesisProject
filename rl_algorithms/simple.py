@@ -1,11 +1,12 @@
 import numpy as np
 import random
 import time
+from plot_util import plot_progress
 from logger import Logger
 from data_util.experiment_data_classes import Parameters
 
 
-def train(width: int, length: int, params: Parameters, environment, visualize=False):
+def train(width: int, length: int, params: Parameters, environment, visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
     q_table = np.zeros((width * length, 4))
 
     exploration_rate = params.start_exploration_rate
@@ -44,5 +45,7 @@ def train(width: int, length: int, params: Parameters, environment, visualize=Fa
         # print(max_reward_current_episode)
         params.rewards_all_episodes.append(rewards_current_episode)
         params.max_rewards_all_episodes.append(max_reward_current_episode)
+        if episode % plot_interval == 0:
+            plot_progress(params.rewards_all_episodes, plot_moving_avg_period)
 
     return q_table, params

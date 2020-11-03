@@ -1,6 +1,6 @@
 
 class LogColors:
-    HEADER = '\033[95m'
+    INPUT = '\033[95m'
     INFO = '\033[94m'
     DEBUG = '\033[96m'
     OKGREEN = '\033[92m'
@@ -24,3 +24,7 @@ class Logger:
     @staticmethod
     def info(*args):
         print(LogColors.INFO + "[INFO]" + LogColors.END + " -", *args)
+
+    @staticmethod
+    def input(*args):
+        print(LogColors.INPUT + "[INPUT]" + LogColors.END + " -", *args)

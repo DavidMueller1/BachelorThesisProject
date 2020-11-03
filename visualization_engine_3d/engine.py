@@ -158,7 +158,7 @@ class Engine3D:
 
         # self.rotate('y', 24.7)
         # self.rotate('x', 180)
-        # self.rotate('z', 180)
+        # self.rotate('z', 1)
 
         self.agent_pos = agent_pos
         self.agent_shape = None

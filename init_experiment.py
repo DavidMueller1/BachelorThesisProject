@@ -11,7 +11,11 @@ import numpy as np
 import time
 
 
-visualize_training = True  # If True, the training will obviously take much much longer
+plot_training_progress = True  # If True, the training will take longer
+plot_interval = 20  # Only refresh plot every n episodes. Will speed up training
+plot_moving_average_period = 100  # The period in which the average is cumputed
+
+visualize_training = False  # If True, the training will obviously take much much longer
 
 
 # RENDERER
@@ -23,7 +27,7 @@ distance = 100
 
 
 # TERRAIN
-terrain_file = ""  # Will generate a new terrain if empty
+terrain_file = "test_2"  # Will generate a new terrain if empty
 
 if terrain_file == "":
     Logger.status("Generating new terrain...")
@@ -32,17 +36,17 @@ if terrain_file == "":
     world = render_engine.Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=1400, height=750)
     world.render()
 
-    print("Would you like to save the new Terrain? (y/n)")
+    Logger.input("Would you like to save the new Terrain? (y/n)")
     q_input = input()
     if q_input == "y":
-        print("Enter a file name: ")
+        Logger.input("Enter a file name: ")
         terrain_file = input()
         save_terrain(terrain_file, terrain)
 
 else:
-    Logger.status("Loading terrain from file \"", terrain_file, "\"...")
+    Logger.status("Loading terrain from file \"" + terrain_file + "\"...")
     terrain: Terrain = load_terrain(terrain_file)
-    world = render_engine.Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=1400, height=750)
+    world = render_engine.Engine3D(terrain, agent_pos=(-3, 22), scale=scale, distance=distance, width=1400, height=750)
     world.render()
 
 Logger.status("Terrain ready. Highest point is", terrain.highest_point)
@@ -55,7 +59,8 @@ params = Parameters(
     num_episodes=10000,
     max_steps_per_episode=500,
 
-    learning_rate=0.1,
+    # learning_rate=0.1,
+    learning_rate=0.5,
     discount_rate=0.99,
 
     start_exploration_rate=1,
@@ -67,7 +72,9 @@ params = Parameters(
     max_rewards_all_episodes=[],
 )
 
-q_table, params = train(terrain.width, terrain.length, params, world, visualize_training)
+q_table, params = train(width=terrain.width, length=terrain.length, params=params, environment=world,
+                        visualize=visualize_training, plot=plot_training_progress, plot_interval=plot_interval,
+                        plot_moving_avg_period=plot_moving_average_period)
 Logger.status("Training done.")
 
 

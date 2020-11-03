@@ -1,6 +1,7 @@
 from terrain_generator.random_terrain_generator import PerlinNoise
 from terrain_generator.random_terrain_generator import RandomTerrain
 from data_util.experiment_data_classes import Terrain
+from logger import Logger
 
 # PARAMS
 n1div = 5  # landmass distribution
@@ -29,11 +30,11 @@ def generate_random_terrain():
             point = [x, y, z]
             points.append(point)
             if z == highest_point[2]:
-                print(point, " has the same height as ", highest_point)
+                Logger.debug(point, " has the same height as ", highest_point)
             if z > highest_point[2]:
                 highest_point = point
 
-    print("Highest Point: ", highest_point)
+    Logger.debug("Highest Point: ", highest_point)
 
     triangles = RandomTerrain.calculate_triangles(points, width, length)
 

@@ -12,7 +12,7 @@ class Vertex:
     def flatten(self, scale, distance):
         # calculate 2D coordinates from 3D point
         projectedY = int(((self.y * distance) / (self.z - distance)) * scale)
-        projectedX = int(((self.x * distance) / (self.z - distance)) * scale)
+        projectedX = int(((-self.x * distance) / (self.z - distance)) * scale)
         return (projectedX, projectedY)
 
     def rotate(self, axis, angle):
