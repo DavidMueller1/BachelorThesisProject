@@ -46,7 +46,7 @@ if terrain_file == "":
 else:
     Logger.status("Loading terrain from file \"" + terrain_file + "\"...")
     terrain: Terrain = load_terrain(terrain_file)
-    world = render_engine.Engine3D(terrain, agent_pos=(-3, 22), scale=scale, distance=distance, width=1400, height=750)
+    world = render_engine.Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=1400, height=750)
     world.render()
 
 Logger.status("Terrain ready. Highest point is", terrain.highest_point)
