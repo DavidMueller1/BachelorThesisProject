@@ -11,7 +11,7 @@ def train(width: int, length: int, params: Parameters, environment, visualize=Fa
 
     exploration_rate = params.start_exploration_rate
     for episode in range(params.num_episodes):
-        if episode % 100 == 0:
+        if episode % 1000 == 0:
             Logger.debug("EPISODE: ", episode)
         state = environment.reset_agent()
         done = False
@@ -37,7 +37,7 @@ def train(width: int, length: int, params: Parameters, environment, visualize=Fa
                 # environment.clear()
                 # environment.render()
                 environment.redraw_agent()
-                time.sleep(0.05)
+                time.sleep(0.04)
 
         exploration_rate = params.min_exploration_rate + (params.max_exploration_rate - params.min_exploration_rate) * np.exp(
             -params.exploration_decay_rate * episode)
