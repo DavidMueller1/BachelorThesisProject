@@ -46,6 +46,6 @@ def train(width: int, length: int, params: Parameters, environment, visualize=Fa
         params.rewards_all_episodes.append(rewards_current_episode)
         params.max_rewards_all_episodes.append(max_reward_current_episode)
         if episode % plot_interval == 0:
-            plot_progress(params.rewards_all_episodes, plot_moving_avg_period)
+            plot_progress(params.rewards_all_episodes, exploration_rate, plot_moving_avg_period)
 
     return q_table, params

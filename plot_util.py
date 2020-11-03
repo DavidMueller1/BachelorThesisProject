@@ -2,15 +2,20 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 
-def plot_progress(values, average_period=100):
+def plot_progress(values, exploration_rate, average_period=100):
     plt.figure(2)
     plt.clf()
     plt.title("Training...")
     plt.xlabel("Episode")
     plt.ylabel("Reward")
-    plt.plot(values)
-    plt.plot(get_average(values, average_period))
-    plt.autoscale()
+    plt.plot(values, label="Reward in episode x")
+    plt.plot(get_average(values, average_period), label="Average reward per " + str(average_period) + " episodes")
+    plt.legend(loc='lower right')
+    plt.subplots_adjust(bottom=0.2)
+    # plt.gcf().text(0.02, -0.1, "Exploration rate: " + str(exploration_rate), fontsize=12)
+    # plt.annotate("Test", [0, -20])
+    plt.text(0.02, 0.025, "Exploration rate: %.2f" % exploration_rate, fontsize=10, transform=plt.gcf().transFigure)
+    # plt.autoscale()
     # plt.show()
     plt.pause(0.0001)
 
