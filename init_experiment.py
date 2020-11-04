@@ -1,4 +1,4 @@
-from visualization_engine_3d import engine as render_engine
+from visualization_engine_3d.engine import Engine3D
 from init_terrain import generate_random_terrain
 from data_util.experiment_data_classes import Terrain
 from data_util.experiment_data_classes import Parameters
@@ -16,14 +16,12 @@ import time
 
 plot_training_progress = True  # If True, the training will take longer
 plot_interval = 20  # Only refresh plot every n episodes. Will speed up training
-plot_moving_average_period = 100  # The period in which the average is cumputed
+plot_moving_average_period = 100  # The period in which the average is computed
 
 visualize_training = False  # If True, the training will obviously take much much longer
 
 
 # RENDERER
-renderer = render_engine
-
 # scale = 20
 scale = 14
 distance = 100
@@ -32,28 +30,27 @@ distance = 100
 # TERRAIN
 terrain_file = ""  # Will generate a new terrain if empty
 
-terrain_saved = False
-
+terrain_saved = False  # Do not change
 if terrain_file == "":
     Logger.status("Generating new terrain...")
     terrain: Terrain = generate_random_terrain()
 
-    world = render_engine.Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=1400, height=750)
+    world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=1400, height=750)
     world.render()
 
     Logger.input("Would you like to save the new Terrain? (y/n)")
-    q_input = input()
-    if q_input == "y":
+    if input() == "y":
         Logger.input("Enter a file name: ")
         terrain_file = input()
         save_terrain(terrain_file, terrain)
         terrain_saved = terrain_file
+        Logger.status("Terrain saved as \"" + terrain_file + "\"")
 
 else:
     terrain_saved = terrain_file
     Logger.status("Loading terrain from file \"" + terrain_file + "\"...")
     terrain: Terrain = load_terrain(terrain_file)
-    world = render_engine.Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=1400, height=750)
+    world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=1400, height=750)
     world.render()
 
 Logger.status("Terrain ready. Highest point is", terrain.highest_point)
@@ -66,7 +63,6 @@ params = Parameters(
     num_episodes=10000,
     max_steps_per_episode=500,
 
-    # learning_rate=0.1,
     learning_rate=0.5,
     discount_rate=0.99,
 
@@ -92,6 +88,7 @@ Logger.info("Non-Zeros in q_table: ", np.count_nonzero(q_table))
 Logger.status("Showing best learned path...")
 time.sleep(3)
 visualize_best_path(world, params, q_table)
+
 
 Logger.input("Would you like to save the Q-Table and the Params? (y/n)")
 if input() == "y":
