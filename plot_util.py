@@ -28,13 +28,5 @@ def get_average(values, period):
         return np.zeros(len(values))
 
 
-# def get_average_manual(values, period):
-#     avg = []
-#     for i in range(len(values)):
-#         if i < period:
-#             avg.append(0)
-#         else:
-#             sum = np.sum(values[i - period:i])
-#             avg.append(sum / float(period))
-#     return avg
-
+def plot_q_table(q_table):
+    return

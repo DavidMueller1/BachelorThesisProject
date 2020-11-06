@@ -192,9 +192,7 @@ class Engine3D:
         return self.get_agent_state()
 
     def get_agent_state(self):
-        (x, y) = self.agent_pos
-        return int((len(self.points) / 2 + (x * self.grid_width + y) + self.grid_height / 2) % len(self.points))
-        # return int(len(self.points) / 2)
+        return self.pos_to_state(self.agent_pos)
 
     def get_agent_possible_actions(self):
         (x, y) = self.agent_pos
@@ -246,3 +244,13 @@ class Engine3D:
         self.draw_agent()
         # self.screen.image.create_oval(200, 200, 204, 204, fill=
         self.screen.window.update()
+
+    def state_to_pos(self, state):
+        x = int(state / self.grid_width) - 25
+        y = state % self.grid_width - 25
+        return x, y
+
+    def pos_to_state(self, pos):
+        (x, y) = pos
+        return int((len(self.points) / 2 + (x * self.grid_width + y) + self.grid_height / 2) % len(self.points))
+

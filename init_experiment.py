@@ -8,7 +8,8 @@ from data_util.data_loader import load_terrain
 from data_util.data_saver import save_terrain
 from data_util.data_saver import save_learned_for_terrain
 from visualize_util import visualize_best_path
-from rl_algorithms.simple import train
+from rl_algorithms import simple
+from rl_algorithms import buffer
 from logger import Logger
 import numpy as np
 import time
@@ -28,7 +29,7 @@ distance = 100
 
 
 # TERRAIN
-terrain_file = ""  # Will generate a new terrain if empty
+terrain_file = "test_2"  # Will generate a new terrain if empty
 
 terrain_saved = False  # Do not change
 if terrain_file == "":
@@ -75,7 +76,7 @@ params = Parameters(
     max_rewards_all_episodes=[],
 )
 
-q_table, params = train(width=terrain.width, length=terrain.length, params=params, environment=world,
+q_table, params = buffer.train(width=terrain.width, length=terrain.length, params=params, environment=world,
                         visualize=visualize_training, plot=plot_training_progress, plot_interval=plot_interval,
                         plot_moving_avg_period=plot_moving_average_period)
 Logger.status("Training done.")
