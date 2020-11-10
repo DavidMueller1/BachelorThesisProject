@@ -41,12 +41,13 @@ def train(width: int, length: int, params: Parameters, environment, visualize=Fa
                 environment.redraw_agent()
                 time.sleep(0.04)
 
-        # HANDLE BUFFER
-        # for index, (buffer_state, buffer_action, buffer_reward, buffer_new_state) in enumerate(buffer):
+        # for index in range(len(buffer)):
+        #     (buffer_state, buffer_action, buffer_reward, buffer_new_state) = buffer.pop(0)
         #     q_table[buffer_state, buffer_action] = q_table[buffer_state, buffer_action] * (1 - params.learning_rate) + params.learning_rate * (
         #                     buffer_reward + params.discount_rate * np.max(q_table[buffer_new_state, :]))
 
-        for index in range(len(buffer)):
+        random.shuffle(buffer)
+        while len(buffer) > 0:
             (buffer_state, buffer_action, buffer_reward, buffer_new_state) = buffer.pop(0)
             q_table[buffer_state, buffer_action] = q_table[buffer_state, buffer_action] * (1 - params.learning_rate) + params.learning_rate * (
                             buffer_reward + params.discount_rate * np.max(q_table[buffer_new_state, :]))
