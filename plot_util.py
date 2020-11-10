@@ -1,5 +1,8 @@
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+from matplotlib import cm
+from logger import Logger
 
 
 def plot_progress(values, exploration_rate, average_period=100):
@@ -28,5 +31,48 @@ def get_average(values, period):
         return np.zeros(len(values))
 
 
-def plot_q_table(q_table):
-    return
+def plot_q_table(q_table, world):
+    # lin_x = np.arange(0, len(q_table[0]), 1)
+    # lin_y = np.arange(0, 10, 1)
+    # x, y = np.meshgrid(lin_x, lin_y)
+
+    plot_north_q_table(q_table, world)
+    # plot_east_q_table(q_table, world)
+
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # ax.plot_surface(x, y, q_table[:10])
+    # plt.show()
+
+
+def plot_north_q_table(q_table, world):
+    lin_x = np.arange(0, 50, 1)
+    lin_y = np.arange(0, 50, 1)
+    x, y = np.meshgrid(lin_x, lin_y)
+    z = np.zeros((50, 50))
+
+    for state, val in enumerate(q_table):
+        pos_x, pos_y = world.state_to_pos(state)
+        z[pos_x + 25, pos_y + 25] = val[1]
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(x, y, z, cmap='bone')
+    plt.pause(0.0001)
+    # plt.show()
+
+
+def plot_east_q_table(q_table, world):
+    lin_x = np.arange(0, 50, 1)
+    lin_y = np.arange(0, 50, 1)
+    x, y = np.meshgrid(lin_x, lin_y)
+    z = np.zeros((50, 50))
+
+    for state, val in enumerate(q_table):
+        pos_x, pos_y = world.state_to_pos(state)
+        z[pos_x + 25, pos_y + 25] = val[2]
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(x, y, z, cmap='bone')
+    plt.show()

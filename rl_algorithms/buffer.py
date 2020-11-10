@@ -47,7 +47,7 @@ def train(width: int, length: int, params: Parameters, environment, visualize=Fa
             q_table[buffer_state, buffer_action] = q_table[buffer_state, buffer_action] * (1 - params.learning_rate) + params.learning_rate * (
                             buffer_reward + params.discount_rate * np.max(q_table[buffer_new_state, :]))
 
-            buffer.pop(index)
+            # buffer.pop(index)
 
         exploration_rate = params.min_exploration_rate + (params.max_exploration_rate - params.min_exploration_rate) * np.exp(
             -params.exploration_decay_rate * episode)
