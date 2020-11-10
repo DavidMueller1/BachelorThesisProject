@@ -10,6 +10,7 @@ def train(width: int, length: int, params: Parameters, environment, visualize=Fa
     q_table = np.zeros((width * length, 4))
 
     exploration_rate = params.start_exploration_rate
+    buffer = []  # list of (state, action, reward, state)-tuples
     for episode in range(params.num_episodes):
         if episode % 1000 == 0:
             Logger.debug("EPISODE: ", episode)
@@ -17,8 +18,6 @@ def train(width: int, length: int, params: Parameters, environment, visualize=Fa
         done = False
         rewards_current_episode = 0
         max_reward_current_episode = 0
-
-        buffer = []  # list of (state, action, reward, state)-tuples
 
         for step in range(params.max_steps_per_episode):
             exploration_rate_threshold = random.uniform(0, 1)
@@ -43,11 +42,14 @@ def train(width: int, length: int, params: Parameters, environment, visualize=Fa
                 time.sleep(0.04)
 
         # HANDLE BUFFER
-        for index, (buffer_state, buffer_action, buffer_reward, buffer_new_state) in enumerate(buffer):
+        # for index, (buffer_state, buffer_action, buffer_reward, buffer_new_state) in enumerate(buffer):
+        #     q_table[buffer_state, buffer_action] = q_table[buffer_state, buffer_action] * (1 - params.learning_rate) + params.learning_rate * (
+        #                     buffer_reward + params.discount_rate * np.max(q_table[buffer_new_state, :]))
+
+        for index in range(len(buffer)):
+            (buffer_state, buffer_action, buffer_reward, buffer_new_state) = buffer.pop(0)
             q_table[buffer_state, buffer_action] = q_table[buffer_state, buffer_action] * (1 - params.learning_rate) + params.learning_rate * (
                             buffer_reward + params.discount_rate * np.max(q_table[buffer_new_state, :]))
-
-            # buffer.pop(index)
 
         exploration_rate = params.min_exploration_rate + (params.max_exploration_rate - params.min_exploration_rate) * np.exp(
             -params.exploration_decay_rate * episode)

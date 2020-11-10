@@ -16,7 +16,7 @@ import time
 
 
 plot_training_progress = True  # If True, the training will take longer
-plot_interval = 20  # Only refresh plot every n episodes. Will speed up training
+plot_interval = 30  # Only refresh plot every n episodes. Will speed up training
 plot_moving_average_period = 100  # The period in which the average is computed
 
 visualize_training = False  # If True, the training will obviously take much much longer
