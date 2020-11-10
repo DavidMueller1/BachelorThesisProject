@@ -31,6 +31,24 @@ def get_average(values, period):
         return np.zeros(len(values))
 
 
+def plot_comparison(values, titles, average_period=100):
+    plt.figure(3)
+    plt.clf()
+    plt.title("Average reward per " + str(average_period) + " episodes")
+    plt.xlabel("Episode")
+    plt.ylabel("Reward")
+    for index, learned in enumerate(values):
+        plt.plot(get_average(learned.parameters.rewards_all_episodes, average_period), label=titles[index])
+    plt.legend(loc='lower right')
+    # plt.subplots_adjust(bottom=0.2)
+    # plt.gcf().text(0.02, -0.1, "Exploration rate: " + str(exploration_rate), fontsize=12)
+    # plt.annotate("Test", [0, -20])
+    # plt.text(0.02, 0.025, "Exploration rate: %.2f" % exploration_rate, fontsize=10, transform=plt.gcf().transFigure)
+    # plt.autoscale()
+    # plt.show()
+    plt.show()
+
+
 def plot_q_table(q_table, world):
     # lin_x = np.arange(0, len(q_table[0]), 1)
     # lin_y = np.arange(0, 10, 1)
