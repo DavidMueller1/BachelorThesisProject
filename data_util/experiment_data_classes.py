@@ -18,6 +18,23 @@ class Parameters:
     rewards_all_episodes: list
     max_rewards_all_episodes: list
 
+@dataclass
+class DeepQParameters:
+    num_episodes: int
+    max_steps_per_episode: int
+
+    learning_rate: float
+    discount_rate: float
+    target_update: int
+
+    start_exploration_rate: float
+    max_exploration_rate: float
+    min_exploration_rate: float
+    exploration_decay_rate: float
+
+    rewards_all_episodes: list
+    max_rewards_all_episodes: list
+
 
 @dataclass
 class Terrain:

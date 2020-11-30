@@ -222,6 +222,8 @@ class Engine3D:
         return self.get_agent_state(), self.points[self.get_agent_state()].z - self.points[last_state].z
         # return self.get_agent_state(), self.points[self.get_agent_state()].z
 
+    # def agent_adjacent_states(self, action):
+
     def render(self):
         # calculate flattened coordinates (x, y)
         self.flattened = []

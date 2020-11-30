@@ -13,7 +13,8 @@ def load_terrain(file: str):
 
 
 def load_learned_with_terrain(file: str):
-    with open("data/learned/" + file, 'rb') as file:
+    # with open("data/learned/" + file, 'rb') as file:
+    with open(file, 'rb') as file:
         data: LearnedForSpecificTerrain = dill.load(file)
 
     with open("data/terrain/" + data.terrainFile, 'rb') as terrain_file:
