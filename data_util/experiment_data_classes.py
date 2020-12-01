@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import numpy as np
+from rl_algorithms.deep_q import DQN
 
 
 @dataclass
@@ -53,7 +54,7 @@ class Learned:
 
 @dataclass
 class LearnedDeepQ:
-    q_table: np.ndarray
+    network: DQN
     parameters: Parameters
 
 

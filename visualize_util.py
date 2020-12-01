@@ -32,8 +32,9 @@ def visualize_best_path_deep_q(world, params: DeepQParameters, target_net):
     reward_sum = 0
     done = False
     for step in range(params.max_steps_per_episode):
+        state_coords = np.asarray(world.agent_pos).astype(np.float32)
         with torch.no_grad():
-            action = target_net(torch.tensor([float(state)]).to(device)).argmax(dim=0).to(device)
+            action = target_net(torch.tensor(state_coords).to(device)).argmax(dim=0).to(device)
         new_state, reward = world.agent_perform_action(action)
         if new_state == last_state:
             done = True

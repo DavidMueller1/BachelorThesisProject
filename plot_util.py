@@ -24,8 +24,8 @@ def plot_network_layer(figure_num, layer_values, current_episode):
     plt.xlabel("Episode")
     plt.ylabel("Weight")
     for index, weights in enumerate(layer_values):
-        plt.plot(x, weights, label="Neuron " + str(index))
-    plt.legend(loc='lower right')
+        plt.plot(x, weights)
+    # plt.legend(loc='lower right')
     plt.pause(0.0001)
 
 

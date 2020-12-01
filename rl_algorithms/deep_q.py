@@ -4,7 +4,6 @@ from util.time_estimate import TimeEstimater
 from plot_util import plot_network
 from plot_util import plot_network_layer
 from logger import Logger
-from data_util.experiment_data_classes import DeepQParameters
 
 import math
 import random
@@ -32,12 +31,12 @@ class DQN(nn.Module):
     def forward(self, t):
         # t = t.flatten(start_dim=0)
         # t = t.reshape([-1])
-        # t = F.relu(self.fully_connected_1(t))
-        # t = F.relu(self.fully_connected_2(t))
-        # t = F.relu(self.fully_connected_3(t))
-        t = self.fc1(t)
-        t = self.fc2(t)
-        t = self.fc3(t)
+        t = F.relu(self.fc1(t))
+        t = F.relu(self.fc2(t))
+        t = F.relu(self.fc3(t))
+        # t = self.fc1(t)
+        # t = self.fc2(t)
+        # t = self.fc3(t)
         t = self.out(t)
         return t
 
@@ -130,7 +129,7 @@ def extract_tensors(sars):
     return (t1, t2, t3, t4)
 
 
-def train(width: int, length: int, params: DeepQParameters, environment, visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
+def train(width: int, length: int, params, environment, visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # TODO Manager
@@ -141,8 +140,8 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
     layer_1_values = []
     layer_2_values = []
 
-    policy_net = DQN(1, 4).to(device)
-    target_net = DQN(1, 4).to(device)
+    policy_net = DQN(2, 4).float().to(device)
+    target_net = DQN(2, 4).float().to(device)
     target_net.load_state_dict(policy_net.state_dict())
     target_net.eval()
     optimizer = optim.Adam(params=policy_net.parameters(), lr=params.learning_rate)
@@ -159,16 +158,20 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
         max_reward_current_episode = 0
         for step in range(params.max_steps_per_episode):
             exploration_rate_threshold = random.uniform(0, 1)
+            state_coords = np.asarray(environment.agent_pos).astype(np.float32)
             if exploration_rate_threshold > exploration_rate:
                 with torch.no_grad():
                     # Logger.debug("Values:", policy_net(torch.tensor([float(state)]).to(device)))
-                    action = policy_net(torch.tensor([float(state)]).to(device)).argmax(dim=0).to(device)
+                    # action = policy_net(torch.tensor([float(state)]).to(device)).argmax(dim=0).to(device)
+                    action = policy_net(torch.tensor(state_coords).to(device)).argmax(dim=0).to(device)
             else:
                 action = random.choice(environment.get_agent_possible_actions())
                 action = torch.tensor([action]).to(device)
             new_state, reward = environment.agent_perform_action(action.item())
+            new_state_coords = np.asarray(environment.agent_pos).astype(np.float32)
             rewards_current_episode += reward
-            buffer.append(Sars(torch.tensor([float(state)]).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor([float(new_state)]).to(device)))
+            # buffer.append(Sars(torch.tensor([float(state)]).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor([float(new_state)]).to(device)))
+            buffer.append(Sars(torch.tensor(state_coords).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor(new_state_coords).to(device)))
             state = new_state
             if max_reward_current_episode < reward:
                 max_reward_current_episode = reward
