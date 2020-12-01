@@ -1,5 +1,8 @@
 import time
 from plot_util import plot_progress
+from util.time_estimate import TimeEstimater
+from plot_util import plot_network
+from plot_util import plot_network_layer
 from logger import Logger
 from data_util.experiment_data_classes import DeepQParameters
 
@@ -21,10 +24,10 @@ import torchvision.transforms as T
 class DQN(nn.Module):
     def __init__(self, num_states, num_actions):
         super().__init__()
-        self.fc1 = nn.Linear(in_features=1, out_features=5)
-        self.fc2 = nn.Linear(in_features=5, out_features=4)
-        self.fc3 = nn.Linear(in_features=4, out_features=4)
-        self.out = nn.Linear(in_features=4, out_features=num_actions)
+        self.fc1 = nn.Linear(in_features=num_states, out_features=4)
+        self.fc2 = nn.Linear(in_features=4, out_features=32)
+        self.fc3 = nn.Linear(in_features=32, out_features=24)
+        self.out = nn.Linear(in_features=24, out_features=num_actions)
 
     def forward(self, t):
         # t = t.flatten(start_dim=0)
@@ -135,12 +138,16 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
     agent = Agent(strategy, 4, device)
     # buffer = ReplayBuffer(params.max_steps_per_episode)
     buffer = []
+    layer_1_values = []
+    layer_2_values = []
 
     policy_net = DQN(1, 4).to(device)
     target_net = DQN(1, 4).to(device)
     target_net.load_state_dict(policy_net.state_dict())
     target_net.eval()
     optimizer = optim.Adam(params=policy_net.parameters(), lr=params.learning_rate)
+
+    time_estimater = TimeEstimater(params.num_episodes)
 
     exploration_rate = params.start_exploration_rate
     for episode in range(params.num_episodes):
@@ -154,6 +161,7 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
             exploration_rate_threshold = random.uniform(0, 1)
             if exploration_rate_threshold > exploration_rate:
                 with torch.no_grad():
+                    # Logger.debug("Values:", policy_net(torch.tensor([float(state)]).to(device)))
                     action = policy_net(torch.tensor([float(state)]).to(device)).argmax(dim=0).to(device)
             else:
                 action = random.choice(environment.get_agent_possible_actions())
@@ -189,6 +197,11 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
 
         if episode % params.target_update == 0:
             target_net.load_state_dict(policy_net.state_dict())
+            layer_1_values.append(target_net.fc1.weight.cpu().data.numpy())
+            layer_2_values.append(target_net.fc2.weight.cpu().data.numpy())
+            # plot_network(target_net)
+            plot_network_layer(4, layer_1_values, episode)
+            plot_network_layer(5, layer_2_values, episode)
 
         exploration_rate = params.min_exploration_rate + (params.max_exploration_rate - params.min_exploration_rate) * np.exp(
             -params.exploration_decay_rate * episode)
@@ -197,6 +210,6 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
         params.max_rewards_all_episodes.append(max_reward_current_episode)
 
         if episode % plot_interval == 0 and plot:
-            plot_progress(params.rewards_all_episodes, exploration_rate, plot_moving_avg_period)
+            plot_progress(params.rewards_all_episodes, exploration_rate, plot_moving_avg_period, time_left=time_estimater.get_time_left(episode))
 
     return target_net, params

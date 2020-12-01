@@ -1,11 +1,35 @@
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+# from rl_algorithms.deep_q import DQN
 import numpy as np
+import time
 from matplotlib import cm
 from logger import Logger
 
 
-def plot_progress(values, exploration_rate, average_period=100):
+def plot_network(network):
+    # Logger.debug("Test:", network[0].weight.data.numpy())
+    Logger.debug("Test:", network.fc1.weight.cpu().data.numpy())
+
+
+def plot_network_layer(figure_num, layer_values, current_episode):
+    if current_episode == 0:
+        return
+    layer_values = np.transpose(np.array(layer_values))[0]
+    step_size = current_episode / (layer_values[0].size - 1)
+    x = np.arange(0, current_episode + 1, step_size)
+    plt.figure(figure_num)
+    plt.clf()
+    plt.title("Development of Layer 1 weights")
+    plt.xlabel("Episode")
+    plt.ylabel("Weight")
+    for index, weights in enumerate(layer_values):
+        plt.plot(x, weights, label="Neuron " + str(index))
+    plt.legend(loc='lower right')
+    plt.pause(0.0001)
+
+
+def plot_progress(values, exploration_rate, average_period=100, time_left=False):
     plt.figure(2)
     plt.clf()
     plt.title("Training...")
@@ -17,7 +41,10 @@ def plot_progress(values, exploration_rate, average_period=100):
     plt.subplots_adjust(bottom=0.2)
     # plt.gcf().text(0.02, -0.1, "Exploration rate: " + str(exploration_rate), fontsize=12)
     # plt.annotate("Test", [0, -20])
-    plt.text(0.02, 0.025, "Exploration rate: %.2f" % exploration_rate, fontsize=10, transform=plt.gcf().transFigure)
+    text = "Exploration rate: %.2f" % exploration_rate
+    if time_left:
+        text += "\nTime left: " + str(time_left).split(".")[0]
+    plt.text(0.02, 0.025, text, fontsize=10, transform=plt.gcf().transFigure)
     # plt.autoscale()
     # plt.show()
     plt.pause(0.0001)

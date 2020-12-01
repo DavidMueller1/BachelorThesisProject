@@ -52,6 +52,17 @@ class Learned:
 
 
 @dataclass
+class LearnedDeepQ:
+    q_table: np.ndarray
+    parameters: Parameters
+
+
+@dataclass
+class LearnedDeepQForSpecificTerrain:
+    learned: LearnedDeepQ
+    terrainFile: str
+
+@dataclass
 class LearnedForSpecificTerrain:
     learned: Learned
     terrainFile: str

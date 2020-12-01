@@ -1,6 +1,7 @@
 import visualization_engine_3d.screen
 import visualization_engine_3d.face
 import visualization_engine_3d.vertex
+from logger import Logger
 from data_util.experiment_data_classes import Terrain
 import copy
 
@@ -219,8 +220,15 @@ class Engine3D:
         if action == 3:
             self.agent_pos = (x, y - 1)
 
-        return self.get_agent_state(), self.points[self.get_agent_state()].z - self.points[last_state].z
+        return self.get_agent_state(), self.get_reward_via_delta(last_state)
+        # return self.get_agent_state(), self.get_reward_finish()
         # return self.get_agent_state(), self.points[self.get_agent_state()].z
+
+    def get_reward_via_delta(self, last_state):
+        return self.points[self.get_agent_state()].z - self.points[last_state].z
+
+    def get_reward_via_finish(self):
+        return 1 if self.agent_pos == tuple(self.highest_point[0:2]) else 0
 
     # def agent_adjacent_states(self, action):
 
