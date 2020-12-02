@@ -124,6 +124,7 @@ class Engine3D:
         self.grid_width = terrain.width
         self.grid_height = terrain.length
         self.highest_point = terrain.highest_point
+        self.terrain = terrain
 
         # initialize display
         self.screen = visualization_engine_3d.screen.Screen(width, height, title, background)
@@ -221,7 +222,7 @@ class Engine3D:
             self.agent_pos = (x, y - 1)
 
         return self.get_agent_state(), self.get_reward_via_delta(last_state)
-        # return self.get_agent_state(), self.get_reward_finish()
+        # return self.get_agent_state(), self.get_reward_via_finish()
         # return self.get_agent_state(), self.points[self.get_agent_state()].z
 
     def get_reward_via_delta(self, last_state):
@@ -229,6 +230,21 @@ class Engine3D:
 
     def get_reward_via_finish(self):
         return 1 if self.agent_pos == tuple(self.highest_point[0:2]) else 0
+
+    def get_agent_height(self):
+        return self.points[self.get_agent_state()].z
+
+    def get_agent_adjacent_heights(self):
+        (x, y) = self.agent_pos
+        half_width = self.terrain.width / 2
+        half_height = self.terrain.length / 2
+        top = -100 if y + 1 > half_height else self.points[self.pos_to_state((x, y + 1))].z
+        bottom = -100 if y - 1 < half_height else self.points[self.pos_to_state((x, y - 1))].z
+        right = -100 if x + 1 > half_width else self.points[self.pos_to_state((x + 1, y))].z
+        left = -100 if x - 1 < half_width else self.points[self.pos_to_state((x - 1, y))].z
+
+        return (self.get_agent_height(), top, right, bottom, left)
+
 
     # def agent_adjacent_states(self, action):
 

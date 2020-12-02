@@ -64,8 +64,8 @@ Logger.status("Terrain ready. Highest point is", terrain.highest_point)
 Logger.status("Beginning training...")
 
 params = DeepQParameters(
-    num_episodes=800,
-    max_steps_per_episode=100,
+    num_episodes=600,
+    max_steps_per_episode=200,
 
     # learning_rate=0.001,
     learning_rate=0.005,

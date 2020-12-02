@@ -23,10 +23,14 @@ import torchvision.transforms as T
 class DQN(nn.Module):
     def __init__(self, num_states, num_actions):
         super().__init__()
-        self.fc1 = nn.Linear(in_features=num_states, out_features=4)
-        self.fc2 = nn.Linear(in_features=4, out_features=32)
+        self.fc1 = nn.Linear(in_features=num_states, out_features=32)
+        self.fc2 = nn.Linear(in_features=32, out_features=32)
         self.fc3 = nn.Linear(in_features=32, out_features=24)
         self.out = nn.Linear(in_features=24, out_features=num_actions)
+        # self.fc1 = nn.Linear(in_features=num_states, out_features=5)
+        # self.fc2 = nn.Linear(in_features=5, out_features=5)
+        # self.fc3 = nn.Linear(in_features=5, out_features=4)
+        # self.out = nn.Linear(in_features=4, out_features=num_actions)
 
     def forward(self, t):
         # t = t.flatten(start_dim=0)
@@ -140,8 +144,9 @@ def train(width: int, length: int, params, environment, visualize=False, plot=Fa
     layer_1_values = []
     layer_2_values = []
 
-    policy_net = DQN(2, 4).float().to(device)
-    target_net = DQN(2, 4).float().to(device)
+    policy_net = DQN(7, 4).float().to(device)
+    policy_net.train()
+    target_net = DQN(7, 4).float().to(device)
     target_net.load_state_dict(policy_net.state_dict())
     target_net.eval()
     optimizer = optim.Adam(params=policy_net.parameters(), lr=params.learning_rate)
@@ -159,19 +164,27 @@ def train(width: int, length: int, params, environment, visualize=False, plot=Fa
         for step in range(params.max_steps_per_episode):
             exploration_rate_threshold = random.uniform(0, 1)
             state_coords = np.asarray(environment.agent_pos).astype(np.float32)
+            adjacent_heights = np.asarray(environment.get_agent_adjacent_heights()).astype(np.float32)
+            combined_state = np.asarray(environment.agent_pos + environment.get_agent_adjacent_heights()).astype(np.float32)
             if exploration_rate_threshold > exploration_rate:
                 with torch.no_grad():
                     # Logger.debug("Values:", policy_net(torch.tensor([float(state)]).to(device)))
                     # action = policy_net(torch.tensor([float(state)]).to(device)).argmax(dim=0).to(device)
-                    action = policy_net(torch.tensor(state_coords).to(device)).argmax(dim=0).to(device)
+                    action = policy_net(torch.tensor(combined_state).to(device)).argmax(dim=0).to(device)
+                    # action = policy_net(torch.tensor(state_coords).to(device)).argmax(dim=0).to(device)
             else:
                 action = random.choice(environment.get_agent_possible_actions())
                 action = torch.tensor([action]).to(device)
             new_state, reward = environment.agent_perform_action(action.item())
+
             new_state_coords = np.asarray(environment.agent_pos).astype(np.float32)
+            new_adjacent_heights = np.asarray(environment.get_agent_adjacent_heights()).astype(np.float32)
+            new_combined_state = np.asarray(environment.agent_pos + environment.get_agent_adjacent_heights()).astype(np.float32)
+
             rewards_current_episode += reward
             # buffer.append(Sars(torch.tensor([float(state)]).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor([float(new_state)]).to(device)))
-            buffer.append(Sars(torch.tensor(state_coords).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor(new_state_coords).to(device)))
+            buffer.append(Sars(torch.tensor(combined_state).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor(new_combined_state).to(device)))
+            # buffer.append(Sars(torch.tensor(state_coords).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor(new_state_coords).to(device)))
             state = new_state
             if max_reward_current_episode < reward:
                 max_reward_current_episode = reward
