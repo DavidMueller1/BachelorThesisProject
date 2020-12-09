@@ -10,7 +10,8 @@ from data_util.data_saver import save_learned_for_terrain_deep_q
 from visualize_util import visualize_best_path_deep_q
 from rl_algorithms import simple
 from rl_algorithms import buffer
-from rl_algorithms import deep_q
+# from rl_algorithms import deep_q
+from rl_algorithms import deep_q_2
 from rl_algorithms import exploration_as_reward
 from logger import Logger
 import numpy as np
@@ -63,21 +64,41 @@ Logger.status("Terrain ready. Highest point is", terrain.highest_point)
 # TRAINING
 Logger.status("Beginning training...")
 
+# params = DeepQParameters(
+#     num_episodes=10000,
+#     max_steps_per_episode=100,
+#     replay_buffer_size=200,
+#     batch_size=5,
+#
+#     # learning_rate=0.001,
+#     learning_rate=0.001,
+#     discount_rate=0.999,
+#     target_update=10,
+#
+#     start_exploration_rate=1,
+#     max_exploration_rate=1,
+#     min_exploration_rate=0.01,
+#     exploration_decay_rate=0.0002,
+#
+#     rewards_all_episodes=[],
+#     max_rewards_all_episodes=[],
+# )
+
 params = DeepQParameters(
-    num_episodes=10000,
+    num_episodes=2000,
     max_steps_per_episode=100,
-    replay_buffer_size=200,
-    batch_size=5,
+    replay_buffer_size=1000,
+    batch_size=25,
 
     # learning_rate=0.001,
-    learning_rate=0.001,
+    learning_rate=0.0001,
     discount_rate=0.999,
     target_update=10,
 
     start_exploration_rate=1,
     max_exploration_rate=1,
     min_exploration_rate=0.01,
-    exploration_decay_rate=0.0002,
+    exploration_decay_rate=0.002,
 
     rewards_all_episodes=[],
     max_rewards_all_episodes=[],
@@ -85,12 +106,10 @@ params = DeepQParameters(
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-target_net, params = deep_q.train(width=terrain.width, length=terrain.length, params=params, environment=world,
+target_net, params = deep_q_2.train(width=terrain.width, length=terrain.length, params=params, environment=world,
                         visualize=visualize_training, plot=plot_training_progress, plot_interval=plot_interval,
                         plot_moving_avg_period=plot_moving_average_period)
 Logger.status("Training done.")
-
-
 
 
 # SHOW RESULT

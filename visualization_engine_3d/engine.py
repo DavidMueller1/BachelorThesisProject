@@ -57,6 +57,22 @@ class Engine3D:
     # def __selectz(self, event):
     #     self.__moveaxis = 'z'
 
+    def __agent_move_up(self, event):
+        self.agent_perform_action(1)
+        self.redraw_agent()
+
+    def __agent_move_down(self, event):
+        self.agent_perform_action(3)
+        self.redraw_agent()
+
+    def __agent_move_left(self, event):
+        self.agent_perform_action(0)
+        self.redraw_agent()
+
+    def __agent_move_right(self, event):
+        self.agent_perform_action(2)
+        self.redraw_agent()
+
     def __moveup(self, event):
         if self.__selected is not None and self.__moveaxis is not None:
             self.points[self.__selected].move(self.__moveaxis, 0.1)
@@ -117,7 +133,7 @@ class Engine3D:
                 triangle.append('gray')
             self.triangles.append(visualization_engine_3d.face.Face(triangle))
             
-    def __init__(self, terrain: Terrain, agent_pos=(0, 0), width=1000, height=700, distance=6, scale=100, title='3D', background='white'):
+    def __init__(self, terrain: Terrain, agent_pos=(0, 0), width=1000, height=700, distance=6, scale=100, title='3D', background='white', manual_control=False):
         # object parameters
         self.distance = distance
         self.scale = scale
@@ -132,8 +148,8 @@ class Engine3D:
         # self.__prev = []
         # self.screen.window.bind('<ButtonRelease-1>', self.__reset_drag)
 
-        self.screen.window.bind('<Up>', self.__zoomin)
-        self.screen.window.bind('<Down>', self.__zoomout)
+        # self.screen.window.bind('<Up>', self.__zoomin)
+        # self.screen.window.bind('<Down>', self.__zoomout)
         self.screen.window.bind('w', self.__cameraup)
         self.screen.window.bind('s', self.__cameradown)
         self.screen.window.bind('a', self.__cameraleft)
@@ -164,6 +180,15 @@ class Engine3D:
 
         self.agent_pos = agent_pos
         self.agent_shape = None
+        self.path_shapes = []
+
+        if manual_control:
+            self.screen.window.bind('<Up>', self.__agent_move_up)
+            self.screen.window.bind('<Right>', self.__agent_move_right)
+            self.screen.window.bind('<Down>', self.__agent_move_down)
+            self.screen.window.bind('<Left>', self.__agent_move_left)
+            self.render()
+            self.screen.window.mainloop()
 
     def clear(self):
         # clear display
@@ -213,13 +238,13 @@ class Engine3D:
         (x, y) = self.agent_pos
         last_state = self.get_agent_state()
         if action == 0:
-            self.agent_pos = (x - 1, y)
+            self.agent_pos = (max(-self.grid_width / 2, x - 1), y)
         if action == 1:
-            self.agent_pos = (x, y + 1)
+            self.agent_pos = (x, min(self.grid_height / 2 - 1, y + 1))
         if action == 2:
-            self.agent_pos = (x + 1, y)
+            self.agent_pos = (min(self.grid_width / 2 - 1, x + 1), y)
         if action == 3:
-            self.agent_pos = (x, y - 1)
+            self.agent_pos = (x, max(-self.grid_height / 2, y - 1))
 
         return self.get_agent_state(), self.get_reward_via_delta(last_state)
         # return self.get_agent_state(), self.get_reward_via_finish()
@@ -249,8 +274,19 @@ class Engine3D:
 
         return (self.get_agent_height(), top, right, bottom, left)
 
+    def plot_path(self, path):
+        for shape in self.path_shapes:
+            self.screen.delete(shape)
+        self.path_shapes = []
 
-    # def agent_adjacent_states(self, action):
+        path_points = [self.points[x] for x in path]
+
+        last_point = path_points[0].flatten(self.scale, self.distance)
+        for point in path_points[1:]:
+            # point.z + 1
+            point = point.flatten(self.scale, self.distance)
+            self.path_shapes.append(self.screen.create_line([last_point, point], color='purple'))
+            last_point = point
 
     def render(self):
         # calculate flattened coordinates (x, y)
