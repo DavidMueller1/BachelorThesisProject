@@ -1,6 +1,6 @@
 from data_util.experiment_data_classes import Parameters
 from data_util.experiment_data_classes import DeepQParameters
-import torch
+import torch as T
 import numpy as np
 import time
 
@@ -25,9 +25,10 @@ def visualize_best_path(world, params: Parameters, q_table):
 
 
 def visualize_best_path_deep_q(world, params: DeepQParameters, target_net):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = T.device("cuda" if T.cuda.is_available() else "cpu")
 
-    state = world.reset_agent()
+    world.reset_agent()
+    state = world.get_state_for_deep_q()
     last_state = state
     reward_sum = 0
     done = False
@@ -35,12 +36,15 @@ def visualize_best_path_deep_q(world, params: DeepQParameters, target_net):
         state_coords = np.asarray(world.agent_pos).astype(np.float32)
         adjacent_heights = np.asarray(world.get_agent_adjacent_heights()).astype(np.float32)
         combined_state = np.asarray(world.agent_pos + world.get_agent_adjacent_heights()).astype(np.float32)
-        with torch.no_grad():
+        # with T.no_grad():
             # action = target_net(torch.tensor(state_coords).to(device)).argmax(dim=0).to(device)
-            action = target_net(torch.tensor(combined_state).to(device)).argmax(dim=0).to(device)
+        state = T.tensor([world.get_state_for_deep_q()]).to(target_net.device)
+        actions = target_net.forward(state)
+        action = T.argmax(actions).item()
+            # action = target_net(T.tensor(combined_state).to(device)).argmax(dim=0).to(device)
         new_state, reward = world.agent_perform_action(action)
-        if new_state == last_state:
-            done = True
+        # if new_state == last_state:
+        #     done = True
         last_state = state
         state = new_state
         reward_sum += reward

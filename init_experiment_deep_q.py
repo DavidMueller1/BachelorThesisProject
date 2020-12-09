@@ -85,13 +85,13 @@ Logger.status("Beginning training...")
 # )
 
 params = DeepQParameters(
-    num_episodes=2000,
+    num_episodes=1000,
     max_steps_per_episode=100,
     replay_buffer_size=1000,
     batch_size=25,
 
     # learning_rate=0.001,
-    learning_rate=0.0001,
+    learning_rate=0.001,
     discount_rate=0.999,
     target_update=10,
 
@@ -119,6 +119,7 @@ Logger.status("Training done.")
 Logger.status("Showing best learned path...")
 while True:
     time.sleep(3)
+    world.clear_path()
     visualize_best_path_deep_q(world, params, target_net)
     Logger.input("Show again? (y/n)")
     if input() == "n":

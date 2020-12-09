@@ -116,12 +116,6 @@ class Agent():
         self.epsilon = self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
 
 
-
-def extract_state(environment):
-    heights = environment.get_agent_adjacent_heights()
-    return np.asarray(environment.agent_pos + tuple(heights[0] - x for x in heights)).astype(np.float32)
-
-
 def train(width: int, length: int, params: DeepQParameters, environment, visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
 
     agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [7], 4, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
@@ -134,14 +128,14 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
         score = 0
         # done = False
         environment.reset_agent()
-        observation = extract_state(environment)
+        observation = environment.get_state_for_deep_q()
 
         path = []
         for step in range(params.max_steps_per_episode):
             action = agent.choose_action(observation)
             state, reward = environment.agent_perform_action(action)
             path.append(state)
-            observation_ = extract_state(environment)
+            observation_ = environment.get_state_for_deep_q()
             # Logger.debug("Observation:", observation)
             # Logger.debug("Observation_:", observation_)
             # Logger.debug("-------------:")

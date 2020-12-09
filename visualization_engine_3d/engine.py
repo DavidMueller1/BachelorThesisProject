@@ -4,6 +4,7 @@ import visualization_engine_3d.vertex
 from logger import Logger
 from data_util.experiment_data_classes import Terrain
 import copy
+import numpy as np
 
 
 class Engine3D:
@@ -260,6 +261,10 @@ class Engine3D:
     def get_reward_via_finish(self):
         return 1 if self.agent_pos == tuple(self.highest_point[0:2]) else 0
 
+    def get_state_for_deep_q(self):
+        heights = self.get_agent_adjacent_heights()
+        return np.asarray(self.agent_pos + tuple(heights[0] - x for x in heights), dtype=np.float32)
+
     def get_agent_height(self):
         return self.points[self.get_agent_state()].z
 
@@ -275,10 +280,7 @@ class Engine3D:
         return (self.get_agent_height(), top, right, bottom, left)
 
     def plot_path(self, path):
-        for shape in self.path_shapes:
-            self.screen.delete(shape)
-        self.path_shapes = []
-
+        self.clear_path()
         path_points = [self.points[x] for x in path]
 
         last_point = path_points[0].flatten(self.scale, self.distance)
@@ -287,6 +289,11 @@ class Engine3D:
             point = point.flatten(self.scale, self.distance)
             self.path_shapes.append(self.screen.create_line([last_point, point], color='purple'))
             last_point = point
+
+    def clear_path(self):
+        for shape in self.path_shapes:
+            self.screen.delete(shape)
+        self.path_shapes = []
 
     def render(self):
         # calculate flattened coordinates (x, y)
