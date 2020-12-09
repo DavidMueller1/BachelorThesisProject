@@ -12,7 +12,7 @@ def plot_network(network):
     Logger.debug("Test:", network.fc1.weight.cpu().data.numpy())
 
 
-def plot_network_layer(figure_num, layer_values, current_episode):
+def plot_network_layer(figure_num, title, layer_values, current_episode):
     if current_episode == 0:
         return
     layer_values = np.transpose(np.array(layer_values))[0]
@@ -20,13 +20,13 @@ def plot_network_layer(figure_num, layer_values, current_episode):
     x = np.arange(0, current_episode + 1, step_size)
     plt.figure(figure_num)
     plt.clf()
-    plt.title("Development of Layer 1 weights")
+    plt.title(title)
     plt.xlabel("Episode")
     plt.ylabel("Weight")
     for index, weights in enumerate(layer_values):
         plt.plot(x, weights)
     # plt.legend(loc='lower right')
-    plt.pause(0.0001)
+    plt.pause(0.00001)
 
 
 def plot_progress(values, exploration_rate, average_period=100, time_left=False):
@@ -47,7 +47,7 @@ def plot_progress(values, exploration_rate, average_period=100, time_left=False)
     plt.text(0.02, 0.025, text, fontsize=10, transform=plt.gcf().transFigure)
     # plt.autoscale()
     # plt.show()
-    plt.pause(0.0001)
+    plt.pause(0.00001)
 
 
 def get_average(values, period):

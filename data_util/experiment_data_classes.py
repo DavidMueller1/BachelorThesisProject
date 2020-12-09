@@ -23,6 +23,8 @@ class Parameters:
 class DeepQParameters:
     num_episodes: int
     max_steps_per_episode: int
+    replay_buffer_size: int
+    batch_size: int
 
     learning_rate: float
     discount_rate: float

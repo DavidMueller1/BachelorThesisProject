@@ -64,25 +64,26 @@ Logger.status("Terrain ready. Highest point is", terrain.highest_point)
 Logger.status("Beginning training...")
 
 params = DeepQParameters(
-    num_episodes=600,
-    max_steps_per_episode=200,
+    num_episodes=10000,
+    max_steps_per_episode=100,
+    replay_buffer_size=200,
+    batch_size=5,
 
     # learning_rate=0.001,
-    learning_rate=0.005,
+    learning_rate=0.001,
     discount_rate=0.999,
     target_update=10,
 
     start_exploration_rate=1,
     max_exploration_rate=1,
     min_exploration_rate=0.01,
-    exploration_decay_rate=0.001,
+    exploration_decay_rate=0.0002,
 
     rewards_all_episodes=[],
     max_rewards_all_episodes=[],
 )
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# TODO Manager
 
 target_net, params = deep_q.train(width=terrain.width, length=terrain.length, params=params, environment=world,
                         visualize=visualize_training, plot=plot_training_progress, plot_interval=plot_interval,

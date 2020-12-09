@@ -23,10 +23,10 @@ import torchvision.transforms as T
 class DQN(nn.Module):
     def __init__(self, num_states, num_actions):
         super().__init__()
-        self.fc1 = nn.Linear(in_features=num_states, out_features=32)
-        self.fc2 = nn.Linear(in_features=32, out_features=32)
-        self.fc3 = nn.Linear(in_features=32, out_features=24)
-        self.out = nn.Linear(in_features=24, out_features=num_actions)
+        self.fc1 = nn.Linear(in_features=num_states, out_features=20)
+        self.fc2 = nn.Linear(in_features=20, out_features=5)
+        # self.fc3 = nn.Linear(in_features=5, out_features=5)
+        self.out = nn.Linear(in_features=5, out_features=num_actions)
         # self.fc1 = nn.Linear(in_features=num_states, out_features=5)
         # self.fc2 = nn.Linear(in_features=5, out_features=5)
         # self.fc3 = nn.Linear(in_features=5, out_features=4)
@@ -37,7 +37,7 @@ class DQN(nn.Module):
         # t = t.reshape([-1])
         t = F.relu(self.fc1(t))
         t = F.relu(self.fc2(t))
-        t = F.relu(self.fc3(t))
+        # t = F.relu(self.fc3(t))
         # t = self.fc1(t)
         # t = self.fc2(t)
         # t = self.fc3(t)
@@ -61,8 +61,8 @@ class ReplayBuffer:
         if len(self.buffer) < self.capacity:
             self.buffer.append(sars)
         else:
-            self.buffer[self.push_count % self.capacity] = sars
-        self.push_count += 1
+            self.buffer[self.push_count] = sars
+        self.push_count = (self.push_count + 1) % self.capacity
 
     def sample(self, batch_size):
         return random.sample(self.buffer, batch_size)
@@ -74,41 +74,12 @@ class ReplayBuffer:
         return len(self.buffer) >= batch_size
 
 
-class EpsilonGreedyStrategy:
-    def __init__(self, start, end, decay):
-        self.start = start
-        self.end = end
-        self.decay = decay
-
-    def get_exploration_rate(self, current_step):
-        return self.end + (self.start - self.end) * math.exp(-1. * current_step * self.decay)
-
-
-class Agent:
-    def __init__(self, exploration_strategy, num_actions, device):
-        self.current_step = 0
-        self.exploration_strategy = exploration_strategy
-        self.num_actions = num_actions
-        self.device = device
-
-    def select_action(self, state, policy_net):
-        rate = self.exploration_strategy.get_exploration_rate(self.current_step)
-        self.current_step += 1
-
-        if rate > random.random():
-            action = random.randrange(self.num_actions)  # Explore
-            return torch.tensor([action]).to(self.device)
-        else:
-            with torch.no_grad():
-                return policy_net(state).argmax(dim=1).to(self.device)  # Exploit
-
-
 class QValues:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     @staticmethod
     def get_current(policy_net, states, actions):
-        Logger.debug(policy_net(torch.tensor([5.]).to(QValues.device)))
+        # Logger.debug(policy_net(torch.tensor([5.]).to(QValues.device)))
         return policy_net(states).gather(dim=1, index=actions.unsqueeze(-1))
 
     @staticmethod
@@ -118,7 +89,8 @@ class QValues:
         # non_final_states = next_states[non_final_state_locations]
         batch_size = next_states.shape[0]
         values = torch.zeros(batch_size).to(QValues.device)
-        values[next_states] = target_net(next_states).max(dim=1)[0].detach()
+        # values[next_states] = target_net(next_states).max(dim=1)[0].detach()
+        values = target_net(next_states).max(dim=1)[0].detach()
         return values
 
 
@@ -136,13 +108,11 @@ def extract_tensors(sars):
 def train(width: int, length: int, params, environment, visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # TODO Manager
-    strategy = EpsilonGreedyStrategy(params.start_exploration_rate, params.min_exploration_rate, params.exploration_decay_rate)
-    agent = Agent(strategy, 4, device)
-    # buffer = ReplayBuffer(params.max_steps_per_episode)
-    buffer = []
+    replay_buffer = ReplayBuffer(params.replay_buffer_size)
+    # buffer = []
     layer_1_values = []
     layer_2_values = []
+    layer_out_values = []
 
     policy_net = DQN(7, 4).float().to(device)
     policy_net.train()
@@ -182,42 +152,86 @@ def train(width: int, length: int, params, environment, visualize=False, plot=Fa
             new_combined_state = np.asarray(environment.agent_pos + environment.get_agent_adjacent_heights()).astype(np.float32)
 
             rewards_current_episode += reward
+            replay_buffer.push(Sars(torch.tensor(combined_state).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor(new_combined_state).to(device)))
             # buffer.append(Sars(torch.tensor([float(state)]).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor([float(new_state)]).to(device)))
-            buffer.append(Sars(torch.tensor(combined_state).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor(new_combined_state).to(device)))
+            # buffer.append(Sars(torch.tensor(combined_state).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor(new_combined_state).to(device)))
             # buffer.append(Sars(torch.tensor(state_coords).to(device), action, torch.tensor([float(reward)]).to(device), torch.tensor(new_state_coords).to(device)))
             state = new_state
             if max_reward_current_episode < reward:
                 max_reward_current_episode = reward
 
-            if visualize:
-                environment.redraw_agent()
-                time.sleep(0.04)
+            sars = replay_buffer.sample_one()
+            state, action, reward, next_state = sars
+            # state, action, reward, next_state = extract_tensors(sars)
 
-        # experiences = buffer.sample_one()
-        random.shuffle(buffer)
-        while len(buffer) > 0:
-            state, action, reward, next_state = buffer.pop(0)
-            # states, actions, rewards, next_states = extract_tensors(experiences)
-            # state, action, reward, next_state = extract_tensors(experiences)
-
-            # current_q_values = QValues.get_current(policy_net, states, actions)
             current_q_values = policy_net(state)
+            # current_q_values = QValues.get_current(policy_net, state, action)
             # next_q_values = QValues.get_next(target_net, next_state)
             next_q_values = target_net(next_state)
-            target_q_values = (next_q_values * params.discount_rate) * reward
+            # target_q_values = reward + (next_q_values * params.discount_rate)
+            target_q_values = current_q_values.clone()
+            target_q_values[action.item()] = reward + torch.max(next_q_values) * params.discount_rate
+            # target_q_values[action.item()] = target_q_values[action.item()] * (1 - params.learning_rate) + params.learning_rate * (reward + torch.max(next_q_values) * params.discount_rate)
+
+            # Logger.debug("Action:", action)
+            # Logger.debug("Reward:", reward)
+            # Logger.debug("Current:", current_q_values)
+            # Logger.debug("Next:", next_q_values)
+            # Logger.debug("Max:", torch.max(next_q_values))
+            # Logger.debug("Target:", target_q_values)
+            # Logger.debug("----------")
+            # Logger.debug("Reward:", reward)
+            # Logger.debug("Target Q-Values:", target_q_values)
 
             loss = F.mse_loss(current_q_values, target_q_values)
             optimizer.zero_grad()
             loss.backward()
-        optimizer.step()
+            optimizer.step()
+
+            if visualize:
+                environment.redraw_agent()
+                time.sleep(0.04)
+
+
+        # experiences = buffer.sample_one()
+        # random.shuffle(buffer)
+        # while len(buffer) > 0:
+        #     state, action, reward, next_state = buffer.pop(0)
+        #     # states, actions, rewards, next_states = extract_tensors(experiences)
+        #     # state, action, reward, next_state = extract_tensors(experiences)
+        #
+        #     # current_q_values = QValues.get_current(policy_net, states, actions)
+        #     current_q_values = policy_net(state)
+        #     # next_q_values = QValues.get_next(target_net, next_state)
+        #     next_q_values = target_net(next_state)
+        #     target_q_values = current_q_values.clone()
+        #     target_q_values[action.item()] = reward + torch.max(next_q_values) * params.discount_rate
+        #     # Logger.debug("Action:", action)
+        #     # Logger.debug("Reward:", reward)
+        #     # Logger.debug("Current:", current_q_values)
+        #     # Logger.debug("Next:", next_q_values)
+        #     # Logger.debug("Max:", torch.max(next_q_values))
+        #     # Logger.debug("Target:", target_q_values)
+        #     # Logger.debug("----------")
+        #     # target_q_values = (next_q_values * params.discount_rate) * reward
+        #     # Logger.debug("Reward:", reward)
+        #     # Logger.debug("Target Q-Values:", target_q_values)
+        #     # target_q_values = current_q_values * reward
+        #
+        #     loss = F.mse_loss(current_q_values, target_q_values)
+        #     optimizer.zero_grad()
+        #     loss.backward()
+        #     optimizer.step()
 
         if episode % params.target_update == 0:
             target_net.load_state_dict(policy_net.state_dict())
             layer_1_values.append(target_net.fc1.weight.cpu().data.numpy())
             layer_2_values.append(target_net.fc2.weight.cpu().data.numpy())
+            layer_out_values.append(target_net.out.weight.cpu().data.numpy())
             # plot_network(target_net)
-            plot_network_layer(4, layer_1_values, episode)
-            plot_network_layer(5, layer_2_values, episode)
+            plot_network_layer(4, "Layer 1", layer_1_values, episode)
+            plot_network_layer(5, "Layer 2", layer_2_values, episode)
+            plot_network_layer(6, "Layer Out", layer_out_values, episode)
 
         exploration_rate = params.min_exploration_rate + (params.max_exploration_rate - params.min_exploration_rate) * np.exp(
             -params.exploration_decay_rate * episode)

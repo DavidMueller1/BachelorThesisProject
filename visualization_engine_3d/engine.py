@@ -228,6 +228,10 @@ class Engine3D:
     def get_reward_via_delta(self, last_state):
         return self.points[self.get_agent_state()].z - self.points[last_state].z
 
+    # def get_reward_via_delta(self, last_state):
+    #     delta = self.points[self.get_agent_state()].z - self.points[last_state].z
+    #     return 1 if delta > 1 else 0
+
     def get_reward_via_finish(self):
         return 1 if self.agent_pos == tuple(self.highest_point[0:2]) else 0
 
