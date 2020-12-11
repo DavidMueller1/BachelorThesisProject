@@ -3,6 +3,7 @@ from logger import Logger
 import plot_util
 from visualize_util import visualize_best_path
 from visualize_util import visualize_best_path_deep_q
+from plot_util import plot_progress
 from visualization_engine_3d.engine import Engine3D
 from tkinter.filedialog import askopenfilename
 from data_util.experiment_data_classes import LearnedDeepQ
@@ -33,6 +34,8 @@ if isinstance(learned, Learned):
         # time.sleep(5)
 elif isinstance(learned, LearnedDeepQ):
     Logger.info("Data is a Deep-Q-Learning sample")
+    Logger.debug("Values:", learned.parameters.rewards_all_episodes)
+    plot_progress(learned.parameters.rewards_all_episodes)
     while True:
         Logger.status("Showing best learned path...")
         visualize_best_path_deep_q(world, learned.parameters, learned.network)

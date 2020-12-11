@@ -58,14 +58,15 @@ class Agent():
         self.new_state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
         self.action_memory = np.zeros(self.mem_size, dtype=np.int32)
         self.reward_memory = np.zeros(self.mem_size, dtype=np.float32)
-        # self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool)
+        self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool)
 
-    def store_transition(self, state, action, reward, state_):
+    def store_transition(self, state, action, reward, state_, done):
         index = self.memory_counter % self.mem_size
         self.state_memory[index] = state
         self.new_state_memory[index] = state_
         self.action_memory[index] = action
         self.reward_memory[index] = reward
+        self.terminal_memory[index] = done
 
         self.memory_counter += 1
 
@@ -93,13 +94,13 @@ class Agent():
         state_batch = T.tensor(self.state_memory[batch]).to(self.policy_net.device)
         new_state_batch = T.tensor(self.new_state_memory[batch]).to(self.policy_net.device)
         reward_batch = T.tensor(self.reward_memory[batch]).to(self.policy_net.device)
-        # terminal_batch = T.tensor(self.terminal_memory[batch]).to(self.policy_net.device)
+        terminal_batch = T.tensor(self.terminal_memory[batch]).to(self.policy_net.device)
 
         action_batch = self.action_memory[batch]
 
         q_eval = self.policy_net.forward(state_batch)[batch_index, action_batch]
         q_next = self.target_net.forward(new_state_batch)  # Target network would be used here
-        # q_next[terminal_batch] = 0.0
+        q_next[terminal_batch] = 0.0
 
         q_target = reward_batch + self.gamma * T.max(q_next, dim=1)[0]
 
@@ -118,7 +119,7 @@ class Agent():
 
 def train(width: int, length: int, params: DeepQParameters, environment, visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
 
-    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [7], 4, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
+    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [7], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
     # time_estimater = TimeEstimater(params.num_episodes)
 
     scores, eps_history = [], []
@@ -133,7 +134,7 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
         path = []
         for step in range(params.max_steps_per_episode):
             action = agent.choose_action(observation)
-            state, reward = environment.agent_perform_action(action)
+            state, reward, done = environment.agent_perform_action(action, step == params.max_steps_per_episode - 1)
             path.append(state)
             observation_ = environment.get_state_for_deep_q()
             # Logger.debug("Observation:", observation)
@@ -141,10 +142,14 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
             # Logger.debug("-------------:")
             # observation_, reward, done, info = env.step(action)
             score += reward
-            agent.store_transition(observation, action, reward, observation_)
+            agent.store_transition(observation, action, reward, observation_, done)
             agent.learn(episode)
             observation = observation_
 
+            if done:
+                break
+
+        # environment.redraw_agent()
         environment.plot_path(path)
 
         scores.append(score)
@@ -161,4 +166,5 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
 
         plot_progress(scores, agent.epsilon)
 
+    params.rewards_all_episodes = scores
     return agent.target_net, params

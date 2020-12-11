@@ -2,6 +2,7 @@ import visualization_engine_3d.screen
 import visualization_engine_3d.face
 import visualization_engine_3d.vertex
 from logger import Logger
+import random
 from data_util.experiment_data_classes import Terrain
 import copy
 import numpy as np
@@ -134,7 +135,7 @@ class Engine3D:
                 triangle.append('gray')
             self.triangles.append(visualization_engine_3d.face.Face(triangle))
             
-    def __init__(self, terrain: Terrain, agent_pos=(0, 0), width=1000, height=700, distance=6, scale=100, title='3D', background='white', manual_control=False):
+    def __init__(self, terrain: Terrain, agent_pos=(0, 0), width=1000, height=700, distance=6, scale=100, title='3D', background='white', manual_control=False, random_spawn=False):
         # object parameters
         self.distance = distance
         self.scale = scale
@@ -142,6 +143,8 @@ class Engine3D:
         self.grid_height = terrain.length
         self.highest_point = terrain.highest_point
         self.terrain = terrain
+        self.random_spawn = random_spawn
+        Logger.debug("Random Spawn:", self.random_spawn)
 
         # initialize display
         self.screen = visualization_engine_3d.screen.Screen(width, height, title, background)
@@ -180,6 +183,8 @@ class Engine3D:
         # self.rotate('z', 1)
 
         self.agent_pos = agent_pos
+        self.agent_last_pos = agent_pos
+        self.agent_same_pos_counter = 0
         self.agent_shape = None
         self.path_shapes = []
 
@@ -216,7 +221,12 @@ class Engine3D:
         self.screen.window.update()
 
     def reset_agent(self):
-        self.agent_pos = (0, 0)
+        if self.random_spawn == True:
+            half_width = int(self.grid_width / 2 - 1)
+            half_height = int(self.grid_height / 2 - 1)
+            self.agent_pos = (random.randint(-half_width, half_width), random.randint(-half_height, half_height))
+        else:
+            self.agent_pos = (0, 0)
         return self.get_agent_state()
 
     def get_agent_state(self):
@@ -235,9 +245,10 @@ class Engine3D:
             actions.append(3)
         return actions
 
-    def agent_perform_action(self, action):
+    def agent_perform_action(self, action, is_last_state):
         (x, y) = self.agent_pos
         last_state = self.get_agent_state()
+        done = False
         if action == 0:
             self.agent_pos = (max(-self.grid_width / 2, x - 1), y)
         if action == 1:
@@ -246,13 +257,22 @@ class Engine3D:
             self.agent_pos = (min(self.grid_width / 2 - 1, x + 1), y)
         if action == 3:
             self.agent_pos = (x, max(-self.grid_height / 2, y - 1))
+        # if action == 4:
+        #     done = True
 
-        return self.get_agent_state(), self.get_reward_via_delta(last_state)
+        return self.get_agent_state(), self.get_reward_via_end_state(is_last_state), done
         # return self.get_agent_state(), self.get_reward_via_finish()
         # return self.get_agent_state(), self.points[self.get_agent_state()].z
 
+    def get_reward_via_end_state(self, is_last_state):
+        return self.points[self.get_agent_state()].z if is_last_state else 0
+
     def get_reward_via_delta(self, last_state):
         return self.points[self.get_agent_state()].z - self.points[last_state].z
+
+    def get_reward_via_delta_punish_negative(self, last_state):
+        reward = self.points[self.get_agent_state()].z - self.points[last_state].z
+        return reward if reward >= 0 else reward * 1.5
 
     # def get_reward_via_delta(self, last_state):
     #     delta = self.points[self.get_agent_state()].z - self.points[last_state].z

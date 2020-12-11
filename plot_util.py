@@ -29,7 +29,7 @@ def plot_network_layer(figure_num, title, layer_values, current_episode):
     plt.pause(0.00001)
 
 
-def plot_progress(values, exploration_rate, average_period=100, time_left=False):
+def plot_progress(values, exploration_rate=False, average_period=100, time_left=False):
     plt.figure(2)
     plt.clf()
     plt.title("Training...")
@@ -41,7 +41,9 @@ def plot_progress(values, exploration_rate, average_period=100, time_left=False)
     plt.subplots_adjust(bottom=0.2)
     # plt.gcf().text(0.02, -0.1, "Exploration rate: " + str(exploration_rate), fontsize=12)
     # plt.annotate("Test", [0, -20])
-    text = "Exploration rate: %.2f" % exploration_rate
+    text = ""
+    if exploration_rate:
+        text += "Exploration rate: %.2f" % exploration_rate
     if time_left:
         text += "\nTime left: " + str(time_left).split(".")[0]
     plt.text(0.02, 0.025, text, fontsize=10, transform=plt.gcf().transFigure)

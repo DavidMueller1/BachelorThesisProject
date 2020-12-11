@@ -85,20 +85,20 @@ Logger.status("Beginning training...")
 # )
 
 params = DeepQParameters(
-    num_episodes=1000,
-    max_steps_per_episode=100,
-    replay_buffer_size=1000,
-    batch_size=25,
+    num_episodes=10000,
+    max_steps_per_episode=10,
+    replay_buffer_size=60000,
+    batch_size=64,
 
     # learning_rate=0.001,
     learning_rate=0.001,
     discount_rate=0.999,
-    target_update=10,
+    target_update=25,
 
     start_exploration_rate=1,
     max_exploration_rate=1,
     min_exploration_rate=0.01,
-    exploration_decay_rate=0.002,
+    exploration_decay_rate=0.005,
 
     rewards_all_episodes=[],
     max_rewards_all_episodes=[],
