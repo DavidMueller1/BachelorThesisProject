@@ -7,6 +7,7 @@ from data_util.experiment_data_classes import Terrain
 import copy
 import numpy as np
 
+HEIGHT_MULTIPLIKATOR = 100
 
 class Engine3D:
 
@@ -60,20 +61,33 @@ class Engine3D:
     #     self.__moveaxis = 'z'
 
     def __agent_move_up(self, event):
+        self.agent_last_pos = self.agent_pos
         self.agent_perform_action(1)
+        self.manuel_control_event()
         self.redraw_agent()
 
     def __agent_move_down(self, event):
+        self.agent_last_pos = self.agent_pos
         self.agent_perform_action(3)
+        self.manuel_control_event()
         self.redraw_agent()
 
     def __agent_move_left(self, event):
+        self.agent_last_pos = self.agent_pos
         self.agent_perform_action(0)
+        self.manuel_control_event()
         self.redraw_agent()
 
     def __agent_move_right(self, event):
+        self.agent_last_pos = self.agent_pos
         self.agent_perform_action(2)
+        self.manuel_control_event()
         self.redraw_agent()
+
+    def manuel_control_event(self):
+        Logger.debug("STEP")
+        Logger.debug("Reward:", self.get_reward_via_delta(self.pos_to_state(self.agent_last_pos)))
+        Logger.debug("New State:", self.get_state_for_deep_q())
 
     def __moveup(self, event):
         if self.__selected is not None and self.__moveaxis is not None:
@@ -183,6 +197,7 @@ class Engine3D:
         # self.rotate('z', 1)
 
         self.agent_pos = agent_pos
+        self.agent_start_pos = agent_pos
         self.agent_last_pos = agent_pos
         self.agent_same_pos_counter = 0
         self.agent_shape = None
@@ -221,10 +236,11 @@ class Engine3D:
         self.screen.window.update()
 
     def reset_agent(self):
-        if self.random_spawn == True:
-            half_width = int(self.grid_width / 2 - 1)
-            half_height = int(self.grid_height / 2 - 1)
-            self.agent_pos = (random.randint(-half_width, half_width), random.randint(-half_height, half_height))
+        if self.random_spawn:
+            half_width = int(self.grid_width / 2)
+            half_height = int(self.grid_height / 2)
+            self.agent_pos = (random.randint(-half_width, half_width - 1), random.randint(-half_height, half_height - 1))
+            self.agent_start_pos = self.agent_pos
         else:
             self.agent_pos = (0, 0)
         return self.get_agent_state()
@@ -245,7 +261,7 @@ class Engine3D:
             actions.append(3)
         return actions
 
-    def agent_perform_action(self, action, is_last_state):
+    def agent_perform_action(self, action):
         (x, y) = self.agent_pos
         last_state = self.get_agent_state()
         done = False
@@ -260,7 +276,8 @@ class Engine3D:
         # if action == 4:
         #     done = True
 
-        return self.get_agent_state(), self.get_reward_via_end_state(is_last_state), done
+        # return self.get_agent_state(), self.get_reward_via_delta(last_state), done
+        return self.get_agent_state(), self.get_reward_via_delta(last_state), done
         # return self.get_agent_state(), self.get_reward_via_finish()
         # return self.get_agent_state(), self.points[self.get_agent_state()].z
 
@@ -268,7 +285,7 @@ class Engine3D:
         return self.points[self.get_agent_state()].z if is_last_state else 0
 
     def get_reward_via_delta(self, last_state):
-        return self.points[self.get_agent_state()].z - self.points[last_state].z
+        return self.points[self.get_agent_state()].z * HEIGHT_MULTIPLIKATOR - self.points[last_state].z * HEIGHT_MULTIPLIKATOR
 
     def get_reward_via_delta_punish_negative(self, last_state):
         reward = self.points[self.get_agent_state()].z - self.points[last_state].z
@@ -283,7 +300,10 @@ class Engine3D:
 
     def get_state_for_deep_q(self):
         heights = self.get_agent_adjacent_heights()
-        return np.asarray(self.agent_pos + tuple(heights[0] - x for x in heights), dtype=np.float32)
+        relative_pos = tuple(np.subtract(self.agent_pos, self.agent_start_pos))
+        # return np.asarray(self.agent_pos + tuple(heights[0] - x for x in heights), dtype=np.float32)
+        # return np.asarray(tuple(heights[0] - x for x in heights), dtype=np.float32)
+        return np.asarray(relative_pos + heights, dtype=np.float32)
 
     def get_agent_height(self):
         return self.points[self.get_agent_state()].z
@@ -292,12 +312,12 @@ class Engine3D:
         (x, y) = self.agent_pos
         half_width = self.terrain.width / 2
         half_height = self.terrain.length / 2
-        top = -100 if y + 1 > half_height else self.points[self.pos_to_state((x, y + 1))].z
-        bottom = -100 if y - 1 < half_height else self.points[self.pos_to_state((x, y - 1))].z
-        right = -100 if x + 1 > half_width else self.points[self.pos_to_state((x + 1, y))].z
-        left = -100 if x - 1 < half_width else self.points[self.pos_to_state((x - 1, y))].z
+        top = -100 * HEIGHT_MULTIPLIKATOR if y + 1 > half_height - 1 else self.points[self.pos_to_state((x, y + 1))].z * HEIGHT_MULTIPLIKATOR
+        bottom = -100 * HEIGHT_MULTIPLIKATOR if y - 1 < -half_height else self.points[self.pos_to_state((x, y - 1))].z * HEIGHT_MULTIPLIKATOR
+        right = -100 * HEIGHT_MULTIPLIKATOR if x + 1 > half_width - 1 else self.points[self.pos_to_state((x + 1, y))].z * HEIGHT_MULTIPLIKATOR
+        left = -100 * HEIGHT_MULTIPLIKATOR if x - 1 < -half_width else self.points[self.pos_to_state((x - 1, y))].z * HEIGHT_MULTIPLIKATOR
 
-        return (self.get_agent_height(), top, right, bottom, left)
+        return (self.get_agent_height() * HEIGHT_MULTIPLIKATOR, top, right, bottom, left)
 
     def plot_path(self, path):
         self.clear_path()

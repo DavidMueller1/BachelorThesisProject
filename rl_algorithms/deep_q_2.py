@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
+import time
 from logger import Logger
 from plot_util import plot_progress
 from data_util.experiment_data_classes import DeepQParameters
@@ -15,11 +16,13 @@ class DeepQNetwork(nn.Module):
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
+        self.fc3_dims = 10
         self.n_actions = n_actions
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
-        self.fc3 = nn.Linear(self.fc2_dims, self.n_actions)
+        self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
+        self.out = nn.Linear(self.fc3_dims, self.n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
         self.loss = nn.MSELoss()
@@ -30,7 +33,8 @@ class DeepQNetwork(nn.Module):
     def forward(self, state):
         x = F.relu(self.fc1(state))
         x = F.relu(self.fc2(x))
-        actions = self.fc3(x)
+        x = F.relu(self.fc3(x))
+        actions = self.out(x)
 
         return actions
 
@@ -75,8 +79,13 @@ class Agent():
             state = T.tensor([observation]).to(self.policy_net.device)
             actions = self.policy_net.forward(state)
             action = T.argmax(actions).item()
+            # Logger.debug("ACTIONS:", actions)
+            # Logger.debug("CHOICE:", action)
+            # Logger.debug("---------------")
         else:
             action = np.random.choice(self.action_space)
+            # Logger.debug("RANDOM CHOICE:", action)
+            # Logger.debug("---------------")
 
         return action
 
@@ -104,6 +113,13 @@ class Agent():
 
         q_target = reward_batch + self.gamma * T.max(q_next, dim=1)[0]
 
+        # Logger.debug("STATE:", state_batch)
+        # Logger.debug("NEW STATE:", new_state_batch)
+        # Logger.debug("REWARD:", reward_batch)
+        # Logger.debug("TERMINAL:", terminal_batch)
+        # Logger.debug("ACTION:", action_batch)
+        # Logger.debug("Q_TARGET:", q_target)
+
         loss = self.policy_net.loss(q_target, q_eval).to(self.policy_net.device)
         loss.backward()
         self.policy_net.optimizer.step()
@@ -117,7 +133,7 @@ class Agent():
         self.epsilon = self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
 
 
-def train(width: int, length: int, params: DeepQParameters, environment, visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
+def train(width: int, length: int, params: DeepQParameters, environment, visualize=False, show_path_interval=20, plot=True, plot_interval=10, plot_moving_avg_period=100):
 
     agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [7], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
     # time_estimater = TimeEstimater(params.num_episodes)
@@ -133,13 +149,14 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
 
         path = []
         for step in range(params.max_steps_per_episode):
+            # Logger.debug("CURRENT STATE:", observation)
+            # Logger.debug("----")
             action = agent.choose_action(observation)
-            state, reward, done = environment.agent_perform_action(action, step == params.max_steps_per_episode - 1)
+            state, reward, done = environment.agent_perform_action(action)
+            # state, reward, done = environment.agent_perform_action(action, step == params.max_steps_per_episode - 1)
             path.append(state)
             observation_ = environment.get_state_for_deep_q()
             # Logger.debug("Observation:", observation)
-            # Logger.debug("Observation_:", observation_)
-            # Logger.debug("-------------:")
             # observation_, reward, done, info = env.step(action)
             score += reward
             agent.store_transition(observation, action, reward, observation_, done)
@@ -149,8 +166,15 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
             if done:
                 break
 
+            if visualize and episode > 100:
+                environment.redraw_agent()
+                input()
+
         # environment.redraw_agent()
-        environment.plot_path(path)
+        if show_path_interval > 0 and episode % show_path_interval == 0:
+            environment.plot_path(path)
+            if environment.random_spawn:
+                environment.redraw_agent()
 
         scores.append(score)
         eps_history.append(agent.epsilon)
@@ -163,8 +187,8 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
         #
         # print('Episode', episode, 'Score %.2f' % score, 'Average score %.2f' % avg_score,
         #       'Epsilon %.2f' % agent.epsilon)
-
-        plot_progress(scores, agent.epsilon)
+        if plot and episode % plot_interval == 0:
+            plot_progress(scores, agent.epsilon, average_period=plot_moving_avg_period)
 
     params.rewards_all_episodes = scores
     return agent.target_net, params

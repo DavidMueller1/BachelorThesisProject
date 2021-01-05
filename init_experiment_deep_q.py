@@ -8,6 +8,7 @@ from data_util.data_loader import load_terrain
 from data_util.data_saver import save_terrain
 from data_util.data_saver import save_learned_for_terrain_deep_q
 from visualize_util import visualize_best_path_deep_q
+from tkinter.filedialog import asksaveasfilename
 from rl_algorithms import simple
 from rl_algorithms import buffer
 # from rl_algorithms import deep_q
@@ -20,8 +21,10 @@ import torch
 
 
 plot_training_progress = True  # If True, the training will take longer
-plot_interval = 1  # Only refresh plot every n episodes. Will speed up training
+plot_interval = 5  # Only refresh plot every n episodes. Will speed up training
 plot_moving_average_period = 100  # The period in which the average is computed
+
+show_path_interval = 20  # The period in which the current episode's path is shown. 0 to never show
 
 visualize_training = False  # If True, the training will obviously take much much longer
 
@@ -55,7 +58,7 @@ else:
     terrain_saved = terrain_file
     Logger.status("Loading terrain from file \"" + terrain_file + "\"...")
     terrain: Terrain = load_terrain(terrain_file)
-    world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800)
+    world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, random_spawn=True)
     world.render()
 
 Logger.status("Terrain ready. Highest point is", terrain.highest_point)
@@ -85,10 +88,12 @@ Logger.status("Beginning training...")
 # )
 
 params = DeepQParameters(
-    num_episodes=10000,
-    max_steps_per_episode=10,
-    replay_buffer_size=60000,
+    num_episodes=1200,
+    max_steps_per_episode=40,
+    # replay_buffer_size=60000,
+    replay_buffer_size=20000,
     batch_size=64,
+    # batch_size=8,
 
     # learning_rate=0.001,
     learning_rate=0.001,
@@ -98,7 +103,7 @@ params = DeepQParameters(
     start_exploration_rate=1,
     max_exploration_rate=1,
     min_exploration_rate=0.01,
-    exploration_decay_rate=0.005,
+    exploration_decay_rate=0.001,
 
     rewards_all_episodes=[],
     max_rewards_all_episodes=[],
@@ -107,7 +112,7 @@ params = DeepQParameters(
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 target_net, params = deep_q_2.train(width=terrain.width, length=terrain.length, params=params, environment=world,
-                        visualize=visualize_training, plot=plot_training_progress, plot_interval=plot_interval,
+                        visualize=visualize_training, show_path_interval=show_path_interval, plot=plot_training_progress, plot_interval=plot_interval,
                         plot_moving_avg_period=plot_moving_average_period)
 Logger.status("Training done.")
 
@@ -135,7 +140,8 @@ if input() == "y":
         terrain_saved = terrain_file
 
     Logger.input("Enter a file name for the learned data: ")
-    file_name = input()
+    # file_name = input()
+    file_name = asksaveasfilename()
     save_learned_for_terrain_deep_q(file_name, LearnedDeepQForSpecificTerrain(LearnedDeepQ(target_net, params), terrain_saved))
     Logger.status("Data saved as \"" + file_name + "\"")
 

@@ -16,5 +16,6 @@ def save_learned_for_terrain(file_name, data: LearnedForSpecificTerrain):
 
 
 def save_learned_for_terrain_deep_q(file_name, data: LearnedDeepQForSpecificTerrain):
-    with open("data/learned/" + file_name, 'wb') as f:
+    # with open("data/learned/" + file_name, 'wb') as f:
+    with open(file_name, 'wb') as f:
         dill.dump(data, f, pickle.HIGHEST_PROTOCOL)

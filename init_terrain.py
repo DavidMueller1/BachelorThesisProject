@@ -7,8 +7,8 @@ from logger import Logger
 n1div = 5  # landmass distribution
 n1scale = 20  # landmass height
 
-width = 50  # map width
-length = 50  # map
+width = 10  # map width
+length = 10  # map
 
 # frequency = 30
 # amplitude = 20
