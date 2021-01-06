@@ -21,7 +21,7 @@ import torch
 
 
 plot_training_progress = True  # If True, the training will take longer
-plot_interval = 5  # Only refresh plot every n episodes. Will speed up training
+plot_interval = 1  # Only refresh plot every n episodes. Will speed up training
 plot_moving_average_period = 100  # The period in which the average is computed
 
 show_path_interval = 20  # The period in which the current episode's path is shown. 0 to never show
@@ -88,8 +88,8 @@ Logger.status("Beginning training...")
 # )
 
 params = DeepQParameters(
-    num_episodes=1200,
-    max_steps_per_episode=40,
+    num_episodes=1000,
+    max_steps_per_episode=80,
     # replay_buffer_size=60000,
     replay_buffer_size=20000,
     batch_size=64,
@@ -103,7 +103,7 @@ params = DeepQParameters(
     start_exploration_rate=1,
     max_exploration_rate=1,
     min_exploration_rate=0.01,
-    exploration_decay_rate=0.001,
+    exploration_decay_rate=0.0015,
 
     rewards_all_episodes=[],
     max_rewards_all_episodes=[],

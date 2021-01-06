@@ -199,6 +199,10 @@ class Engine3D:
         self.agent_pos = agent_pos
         self.agent_start_pos = agent_pos
         self.agent_last_pos = agent_pos
+
+        self.highest_point_vistited_pos = (0, 0)
+        self.highest_point_vistited_height = -100
+
         self.agent_same_pos_counter = 0
         self.agent_shape = None
         self.path_shapes = []
@@ -241,12 +245,17 @@ class Engine3D:
             half_height = int(self.grid_height / 2)
             self.agent_pos = (random.randint(-half_width, half_width - 1), random.randint(-half_height, half_height - 1))
             self.agent_start_pos = self.agent_pos
+            self.highest_point_vistited_height = self.get_agent_height()
+            self.highest_point_vistited_pos = self.get_agent_relative_pos()
         else:
             self.agent_pos = (0, 0)
         return self.get_agent_state()
 
     def get_agent_state(self):
         return self.pos_to_state(self.agent_pos)
+
+    def get_agent_relative_pos(self):
+        return tuple(np.subtract(self.agent_pos, self.agent_start_pos))
 
     def get_agent_possible_actions(self):
         (x, y) = self.agent_pos
@@ -261,7 +270,7 @@ class Engine3D:
             actions.append(3)
         return actions
 
-    def agent_perform_action(self, action):
+    def agent_perform_action(self, action, is_last_action=False):
         (x, y) = self.agent_pos
         last_state = self.get_agent_state()
         done = False
@@ -273,11 +282,14 @@ class Engine3D:
             self.agent_pos = (min(self.grid_width / 2 - 1, x + 1), y)
         if action == 3:
             self.agent_pos = (x, max(-self.grid_height / 2, y - 1))
+
+        if self.get_agent_height() > self.highest_point_vistited_height:
+            self.highest_point_vistited_height = self.get_agent_height()
+            self.highest_point_vistited_pos = self.get_agent_relative_pos()
         # if action == 4:
         #     done = True
-
-        # return self.get_agent_state(), self.get_reward_via_delta(last_state), done
         return self.get_agent_state(), self.get_reward_via_delta(last_state), done
+        # return self.get_agent_state(), self.get_reward_via_end_state(is_last_action), done
         # return self.get_agent_state(), self.get_reward_via_finish()
         # return self.get_agent_state(), self.points[self.get_agent_state()].z
 
@@ -300,10 +312,12 @@ class Engine3D:
 
     def get_state_for_deep_q(self):
         heights = self.get_agent_adjacent_heights()
-        relative_pos = tuple(np.subtract(self.agent_pos, self.agent_start_pos))
+        relative_pos = self.get_agent_relative_pos()
         # return np.asarray(self.agent_pos + tuple(heights[0] - x for x in heights), dtype=np.float32)
         # return np.asarray(tuple(heights[0] - x for x in heights), dtype=np.float32)
-        return np.asarray(relative_pos + heights, dtype=np.float32)
+        # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32)
+        # return np.append(np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32), np.array(self.highest_point_vistited_height * HEIGHT_MULTIPLIKATOR, dtype=np.float32))
+        return np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32)
 
     def get_agent_height(self):
         return self.points[self.get_agent_state()].z

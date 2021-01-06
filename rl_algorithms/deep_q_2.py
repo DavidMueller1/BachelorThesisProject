@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
+from util.time_estimate import TimeEstimater
 import time
 from logger import Logger
 from plot_util import plot_progress
@@ -17,6 +18,7 @@ class DeepQNetwork(nn.Module):
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
         self.fc3_dims = 10
+        self.fc4_dims = 5
         self.n_actions = n_actions
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
@@ -31,9 +33,10 @@ class DeepQNetwork(nn.Module):
         self.to(self.device)
 
     def forward(self, state):
-        x = F.relu(self.fc1(state))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
+        # x = F.prelu(self.fc1(state), T.tensor(-1.0).to(self.device))
+        x = F.leaky_relu(self.fc1(state))
+        x = F.leaky_relu(self.fc2(x))
+        x = F.leaky_relu(self.fc3(x))
         actions = self.out(x)
 
         return actions
@@ -135,27 +138,32 @@ class Agent():
 
 def train(width: int, length: int, params: DeepQParameters, environment, visualize=False, show_path_interval=20, plot=True, plot_interval=10, plot_moving_avg_period=100):
 
-    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [7], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
+    # agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
+    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [10], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
     # time_estimater = TimeEstimater(params.num_episodes)
 
     scores, eps_history = [], []
     n_games = 1500
 
+    time_estimater = TimeEstimater(params.num_episodes)
+
     for episode in range(params.num_episodes):
         score = 0
         # done = False
         environment.reset_agent()
-        observation = environment.get_state_for_deep_q()
+        # observation = environment.get_state_for_deep_q()
+        observation = np.append(environment.get_state_for_deep_q(), np.array(params.max_steps_per_episode, dtype=np.float32))
 
         path = []
         for step in range(params.max_steps_per_episode):
-            # Logger.debug("CURRENT STATE:", observation)
+            # Logger.debug("STEP:", step)
             # Logger.debug("----")
             action = agent.choose_action(observation)
-            state, reward, done = environment.agent_perform_action(action)
+            state, reward, done = environment.agent_perform_action(action, is_last_action=(step + 1 == params.max_steps_per_episode))
             # state, reward, done = environment.agent_perform_action(action, step == params.max_steps_per_episode - 1)
             path.append(state)
-            observation_ = environment.get_state_for_deep_q()
+            # observation_ = environment.get_state_for_deep_q()
+            observation_ = np.append(environment.get_state_for_deep_q(), np.array(params.max_steps_per_episode - step, dtype=np.float32))
             # Logger.debug("Observation:", observation)
             # observation_, reward, done, info = env.step(action)
             score += reward
@@ -188,7 +196,7 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
         # print('Episode', episode, 'Score %.2f' % score, 'Average score %.2f' % avg_score,
         #       'Epsilon %.2f' % agent.epsilon)
         if plot and episode % plot_interval == 0:
-            plot_progress(scores, agent.epsilon, average_period=plot_moving_avg_period)
+            plot_progress(scores, agent.epsilon, average_period=plot_moving_avg_period, time_left=time_estimater.get_time_left(episode))
 
     params.rewards_all_episodes = scores
     return agent.target_net, params
