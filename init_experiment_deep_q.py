@@ -88,8 +88,8 @@ Logger.status("Beginning training...")
 # )
 
 params = DeepQParameters(
-    num_episodes=2000,
-    max_steps_per_episode=75,
+    num_episodes=1000,
+    max_steps_per_episode=60,
     # replay_buffer_size=60000,
     replay_buffer_size=20000,
     # batch_size=64,

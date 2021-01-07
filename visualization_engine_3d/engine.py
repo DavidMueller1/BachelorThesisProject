@@ -8,8 +8,8 @@ import copy
 import numpy as np
 
 HEIGHT_MULTIPLIKATOR = 100
-VISITED_MULTIPLIKATOR = 100
-DISTANCE_MULTIPLIKATOR = 10
+VISITED_MULTIPLIKATOR = 10
+DISTANCE_MULTIPLIKATOR = 1
 
 class Engine3D:
 
@@ -317,30 +317,32 @@ class Engine3D:
         # return self.get_agent_state(), self.get_reward_via_delta(last_state), done
         # return self.get_agent_state(), self.get_reward_via_end_state(is_last_action), done
         # return self.get_agent_state(), self.get_reward_via_visited_points(is_last_action), done
-        # return self.get_agent_state(), 1 if new_point else 0, done
+        # return self.get_agent_state(), self.get_reward_via_visited_points(is_last_action) - (self.get_reward_via_distance_from_start() if is_last_action else 0), done
+        # return self.get_agent_state(), VISITED_MULTIPLIKATOR if new_point else 0, done
+        return self.get_agent_state(), (VISITED_MULTIPLIKATOR if new_point else 0) - self.get_reward_via_distance_from_start(), done
         # return self.get_agent_state(), self.get_reward_via_finish()
         # return self.get_agent_state(), self.points[self.get_agent_state()].z
         # return self.get_agent_state(), self.get_reward_via_delta(last_state) + (VISITED_MULTIPLIKATOR if new_point else 0), done
-        return self.get_agent_state(), self.get_reward_via_delta(last_state) + (VISITED_MULTIPLIKATOR if new_point else 0), done
+        # return self.get_agent_state(), self.get_reward_via_delta(last_state) + (VISITED_MULTIPLIKATOR if new_point else 0), done
 
     def get_reward_via_end_state(self, is_last_state):
         # return self.points[self.get_agent_state()].z if is_last_state else 0
         return (self.highest_point_vistited_height - self.get_agent_height()) * HEIGHT_MULTIPLIKATOR + len(self.visited_points) * VISITED_MULTIPLIKATOR if is_last_state else 0
 
     def get_reward_via_visited_points(self, is_last_state):
-        return len(self.visited_points) * VISITED_MULTIPLIKATOR - self.get_agent_distance_from_spawn() if is_last_state else 0
+        return len(self.visited_points) * VISITED_MULTIPLIKATOR if is_last_state else 0
         # return len(self.visited_points) * VISITED_MULTIPLIKATOR
 
     def get_reward_via_distance_from_start(self):
         # return len(self.visited_points) if is_last_state else 0
-        return len(self.visited_points) * DISTANCE_MULTIPLIKATOR
+        return self.get_agent_distance_from_spawn() * DISTANCE_MULTIPLIKATOR
 
     def get_reward_via_delta(self, last_state):
         # return self.points[self.get_agent_state()].z * HEIGHT_MULTIPLIKATOR - self.points[last_state].z * HEIGHT_MULTIPLIKATOR
         return self.original_points[self.get_agent_state()][2] * HEIGHT_MULTIPLIKATOR - self.original_points[last_state][2] * HEIGHT_MULTIPLIKATOR
 
-    def get_reward_via_start_delta(self, is_last_state):
-        return self.original_points[self.get_agent_state()][2] * HEIGHT_MULTIPLIKATOR - self.original_points[last_state][2] * HEIGHT_MULTIPLIKATOR
+    # def get_reward_via_start_delta(self, is_last_state):
+    #     return self.original_points[self.get_agent_state()][2] * HEIGHT_MULTIPLIKATOR - self.original_points[last_state][2] * HEIGHT_MULTIPLIKATOR
 
     def get_reward_via_delta_punish_negative(self, last_state):
         reward = self.original_points[self.get_agent_state()][2] - self.original_points[last_state][2]
@@ -366,7 +368,8 @@ class Engine3D:
         # return np.append(np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32), np.array(self.highest_point_vistited_height * HEIGHT_MULTIPLIKATOR, dtype=np.float32))
         # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32)
         # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos + adjacent_visited + steps_left, dtype=np.float32)
-        return np.asarray(relative_pos + heights + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32)
+        # return np.asarray(relative_pos + heights + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32)
+        return np.asarray(relative_pos + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32)
 
     def get_agent_height(self):
         return self.original_points[self.get_agent_state()][2]
@@ -383,13 +386,14 @@ class Engine3D:
         return (self.get_agent_height() * HEIGHT_MULTIPLIKATOR, top, right, bottom, left)
 
     def get_agent_adjacent_visited(self):
+        mul = 10
         (x, y) = self.agent_pos
         half_width = self.terrain.width / 2
         half_height = self.terrain.length / 2
-        top = -1 if y + 1 > half_height - 1 else (0 if self.original_points[self.pos_to_state((x, y + 1))] in self.visited_points else 1)
-        bottom = -1 if y - 1 < -half_height else (0 if self.original_points[self.pos_to_state((x, y - 1))] in self.visited_points else 1)
-        right = -1 if x + 1 > half_width - 1 else (0 if self.original_points[self.pos_to_state((x + 1, y))] in self.visited_points else 1)
-        left = -1 if x - 1 < -half_width else (0 if self.original_points[self.pos_to_state((x - 1, y))] in self.visited_points else 1)
+        top = -1 * mul if y + 1 > half_height - 1 else (0 if self.original_points[self.pos_to_state((x, y + 1))] in self.visited_points else 1 * mul)
+        bottom = -1 * mul if y - 1 < -half_height else (0 if self.original_points[self.pos_to_state((x, y - 1))] in self.visited_points else 1 * mul)
+        right = -1 * mul if x + 1 > half_width - 1 else (0 if self.original_points[self.pos_to_state((x + 1, y))] in self.visited_points else 1 * mul)
+        left = -1 * mul if x - 1 < -half_width else (0 if self.original_points[self.pos_to_state((x - 1, y))] in self.visited_points else 1 * mul)
 
         return (top, right, bottom, left)
 

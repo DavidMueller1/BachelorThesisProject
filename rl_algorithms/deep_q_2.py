@@ -23,8 +23,8 @@ class DeepQNetwork(nn.Module):
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
-        self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
-        self.out = nn.Linear(self.fc3_dims, self.n_actions)
+        # self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
+        self.out = nn.Linear(self.fc2_dims, self.n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
         self.loss = nn.MSELoss()
@@ -34,9 +34,10 @@ class DeepQNetwork(nn.Module):
 
     def forward(self, state):
         # x = F.prelu(self.fc1(state), T.tensor(-1.0).to(self.device))
-        x = F.leaky_relu(self.fc1(state))
-        x = F.leaky_relu(self.fc2(x))
-        x = F.leaky_relu(self.fc3(x))
+
+        # x = F.leaky_relu(self.fc1(state))
+        # x = F.leaky_relu(self.fc2(x))
+        # x = F.leaky_relu(self.fc3(x))
 
         # x = F.relu(self.fc1(state))
         # x = F.relu(self.fc2(x))
@@ -50,8 +51,8 @@ class DeepQNetwork(nn.Module):
         # x = F.gelu(self.fc2(x))
         # x = T.sigmoid(self.fc3(x))
 
-        # x = T.sigmoid(self.fc1(state))
-        # x = T.sigmoid(self.fc2(x))
+        x = T.sigmoid(self.fc1(state))
+        x = T.sigmoid(self.fc2(x))
         # x = T.sigmoid(self.fc3(x))
 
         # x = F.relu(self.fc1(state))
@@ -158,7 +159,7 @@ class Agent():
 def train(width: int, length: int, params: DeepQParameters, environment, visualize=False, show_path_interval=20, plot=True, plot_interval=10, plot_moving_avg_period=100):
 
     # agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
-    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [13], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
+    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
     # time_estimater = TimeEstimater(params.num_episodes)
 
     scores, eps_history = [], []
