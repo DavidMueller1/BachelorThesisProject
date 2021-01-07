@@ -8,6 +8,8 @@ import copy
 import numpy as np
 
 HEIGHT_MULTIPLIKATOR = 100
+VISITED_MULTIPLIKATOR = 100
+DISTANCE_MULTIPLIKATOR = 10
 
 class Engine3D:
 
@@ -62,32 +64,38 @@ class Engine3D:
 
     def __agent_move_up(self, event):
         self.agent_last_pos = self.agent_pos
-        self.agent_perform_action(1)
+        state, reward, done = self.agent_perform_action(1)
+        Logger.debug("REWARD:", reward)
         self.manuel_control_event()
         self.redraw_agent()
 
     def __agent_move_down(self, event):
         self.agent_last_pos = self.agent_pos
-        self.agent_perform_action(3)
+        state, reward, done = self.agent_perform_action(3)
+        Logger.debug("REWARD:", reward)
         self.manuel_control_event()
         self.redraw_agent()
 
     def __agent_move_left(self, event):
         self.agent_last_pos = self.agent_pos
-        self.agent_perform_action(0)
+        state, reward, done = self.agent_perform_action(0)
+        Logger.debug("REWARD:", reward)
         self.manuel_control_event()
         self.redraw_agent()
 
     def __agent_move_right(self, event):
         self.agent_last_pos = self.agent_pos
-        self.agent_perform_action(2)
+        state, reward, done = self.agent_perform_action(2)
+        Logger.debug("REWARD:", reward)
         self.manuel_control_event()
         self.redraw_agent()
 
     def manuel_control_event(self):
         Logger.debug("STEP")
-        Logger.debug("Reward:", self.get_reward_via_delta(self.pos_to_state(self.agent_last_pos)))
-        Logger.debug("New State:", self.get_state_for_deep_q())
+        Logger.debug("New State:", self.get_state_for_deep_q(step=4, max_steps=10))
+        Logger.debug("VISITED:", self.visited_points)
+        Logger.debug("DISTANCE:", self.get_agent_distance_from_spawn())
+        Logger.debug("------------")
 
     def __moveup(self, event):
         if self.__selected is not None and self.__moveaxis is not None:
@@ -186,6 +194,7 @@ class Engine3D:
         # self.screen.window.bind('<Right>', self.__moveup)
         
         # store coordinates
+        self.original_points = terrain.points
         self.write_points(terrain.points)
         self.flattened = []
 
@@ -202,6 +211,10 @@ class Engine3D:
 
         self.highest_point_vistited_pos = (0, 0)
         self.highest_point_vistited_height = -100
+
+        self.visited_points = [self.original_points[self.get_agent_state()]]
+
+        self.furthes_distance_from_spawn = 0
 
         self.agent_same_pos_counter = 0
         self.agent_shape = None
@@ -247,6 +260,7 @@ class Engine3D:
             self.agent_start_pos = self.agent_pos
             self.highest_point_vistited_height = self.get_agent_height()
             self.highest_point_vistited_pos = self.get_agent_relative_pos()
+            self.visited_points = [self.original_points[self.get_agent_state()]]
         else:
             self.agent_pos = (0, 0)
         return self.get_agent_state()
@@ -256,6 +270,10 @@ class Engine3D:
 
     def get_agent_relative_pos(self):
         return tuple(np.subtract(self.agent_pos, self.agent_start_pos))
+
+    def get_agent_distance_from_spawn(self):
+        (x, y) = self.get_agent_relative_pos()
+        return abs(x) + abs(y)
 
     def get_agent_possible_actions(self):
         (x, y) = self.agent_pos
@@ -273,6 +291,7 @@ class Engine3D:
     def agent_perform_action(self, action, is_last_action=False):
         (x, y) = self.agent_pos
         last_state = self.get_agent_state()
+
         done = False
         if action == 0:
             self.agent_pos = (max(-self.grid_width / 2, x - 1), y)
@@ -286,21 +305,45 @@ class Engine3D:
         if self.get_agent_height() > self.highest_point_vistited_height:
             self.highest_point_vistited_height = self.get_agent_height()
             self.highest_point_vistited_pos = self.get_agent_relative_pos()
+
+        new_point = False
+        if self.original_points[self.get_agent_state()] not in self.visited_points:
+            new_point = True
+            self.visited_points.append(self.original_points[self.get_agent_state()])
+
+
         # if action == 4:
         #     done = True
-        return self.get_agent_state(), self.get_reward_via_delta(last_state), done
+        # return self.get_agent_state(), self.get_reward_via_delta(last_state), done
         # return self.get_agent_state(), self.get_reward_via_end_state(is_last_action), done
+        # return self.get_agent_state(), self.get_reward_via_visited_points(is_last_action), done
+        # return self.get_agent_state(), 1 if new_point else 0, done
         # return self.get_agent_state(), self.get_reward_via_finish()
         # return self.get_agent_state(), self.points[self.get_agent_state()].z
+        # return self.get_agent_state(), self.get_reward_via_delta(last_state) + (VISITED_MULTIPLIKATOR if new_point else 0), done
+        return self.get_agent_state(), self.get_reward_via_delta(last_state) + (VISITED_MULTIPLIKATOR if new_point else 0), done
 
     def get_reward_via_end_state(self, is_last_state):
-        return self.points[self.get_agent_state()].z if is_last_state else 0
+        # return self.points[self.get_agent_state()].z if is_last_state else 0
+        return (self.highest_point_vistited_height - self.get_agent_height()) * HEIGHT_MULTIPLIKATOR + len(self.visited_points) * VISITED_MULTIPLIKATOR if is_last_state else 0
+
+    def get_reward_via_visited_points(self, is_last_state):
+        return len(self.visited_points) * VISITED_MULTIPLIKATOR - self.get_agent_distance_from_spawn() if is_last_state else 0
+        # return len(self.visited_points) * VISITED_MULTIPLIKATOR
+
+    def get_reward_via_distance_from_start(self):
+        # return len(self.visited_points) if is_last_state else 0
+        return len(self.visited_points) * DISTANCE_MULTIPLIKATOR
 
     def get_reward_via_delta(self, last_state):
-        return self.points[self.get_agent_state()].z * HEIGHT_MULTIPLIKATOR - self.points[last_state].z * HEIGHT_MULTIPLIKATOR
+        # return self.points[self.get_agent_state()].z * HEIGHT_MULTIPLIKATOR - self.points[last_state].z * HEIGHT_MULTIPLIKATOR
+        return self.original_points[self.get_agent_state()][2] * HEIGHT_MULTIPLIKATOR - self.original_points[last_state][2] * HEIGHT_MULTIPLIKATOR
+
+    def get_reward_via_start_delta(self, is_last_state):
+        return self.original_points[self.get_agent_state()][2] * HEIGHT_MULTIPLIKATOR - self.original_points[last_state][2] * HEIGHT_MULTIPLIKATOR
 
     def get_reward_via_delta_punish_negative(self, last_state):
-        reward = self.points[self.get_agent_state()].z - self.points[last_state].z
+        reward = self.original_points[self.get_agent_state()][2] - self.original_points[last_state][2]
         return reward if reward >= 0 else reward * 1.5
 
     # def get_reward_via_delta(self, last_state):
@@ -310,28 +353,45 @@ class Engine3D:
     def get_reward_via_finish(self):
         return 1 if self.agent_pos == tuple(self.highest_point[0:2]) else 0
 
-    def get_state_for_deep_q(self):
+    def get_state_for_deep_q(self, step=False, max_steps=False,):
         heights = self.get_agent_adjacent_heights()
         relative_pos = self.get_agent_relative_pos()
+        adjacent_visited = self.get_agent_adjacent_visited()
+        steps_left = (0, )
+        if step and max_steps:
+            steps_left = (int(max_steps - step), )
         # return np.asarray(self.agent_pos + tuple(heights[0] - x for x in heights), dtype=np.float32)
         # return np.asarray(tuple(heights[0] - x for x in heights), dtype=np.float32)
         # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32)
         # return np.append(np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32), np.array(self.highest_point_vistited_height * HEIGHT_MULTIPLIKATOR, dtype=np.float32))
-        return np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32)
+        # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32)
+        # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos + adjacent_visited + steps_left, dtype=np.float32)
+        return np.asarray(relative_pos + heights + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32)
 
     def get_agent_height(self):
-        return self.points[self.get_agent_state()].z
+        return self.original_points[self.get_agent_state()][2]
 
     def get_agent_adjacent_heights(self):
         (x, y) = self.agent_pos
         half_width = self.terrain.width / 2
         half_height = self.terrain.length / 2
-        top = -100 * HEIGHT_MULTIPLIKATOR if y + 1 > half_height - 1 else self.points[self.pos_to_state((x, y + 1))].z * HEIGHT_MULTIPLIKATOR
-        bottom = -100 * HEIGHT_MULTIPLIKATOR if y - 1 < -half_height else self.points[self.pos_to_state((x, y - 1))].z * HEIGHT_MULTIPLIKATOR
-        right = -100 * HEIGHT_MULTIPLIKATOR if x + 1 > half_width - 1 else self.points[self.pos_to_state((x + 1, y))].z * HEIGHT_MULTIPLIKATOR
-        left = -100 * HEIGHT_MULTIPLIKATOR if x - 1 < -half_width else self.points[self.pos_to_state((x - 1, y))].z * HEIGHT_MULTIPLIKATOR
+        top = -100 * HEIGHT_MULTIPLIKATOR if y + 1 > half_height - 1 else self.original_points[self.pos_to_state((x, y + 1))][2] * HEIGHT_MULTIPLIKATOR
+        bottom = -100 * HEIGHT_MULTIPLIKATOR if y - 1 < -half_height else self.original_points[self.pos_to_state((x, y - 1))][2] * HEIGHT_MULTIPLIKATOR
+        right = -100 * HEIGHT_MULTIPLIKATOR if x + 1 > half_width - 1 else self.original_points[self.pos_to_state((x + 1, y))][2] * HEIGHT_MULTIPLIKATOR
+        left = -100 * HEIGHT_MULTIPLIKATOR if x - 1 < -half_width else self.original_points[self.pos_to_state((x - 1, y))][2] * HEIGHT_MULTIPLIKATOR
 
         return (self.get_agent_height() * HEIGHT_MULTIPLIKATOR, top, right, bottom, left)
+
+    def get_agent_adjacent_visited(self):
+        (x, y) = self.agent_pos
+        half_width = self.terrain.width / 2
+        half_height = self.terrain.length / 2
+        top = -1 if y + 1 > half_height - 1 else (0 if self.original_points[self.pos_to_state((x, y + 1))] in self.visited_points else 1)
+        bottom = -1 if y - 1 < -half_height else (0 if self.original_points[self.pos_to_state((x, y - 1))] in self.visited_points else 1)
+        right = -1 if x + 1 > half_width - 1 else (0 if self.original_points[self.pos_to_state((x + 1, y))] in self.visited_points else 1)
+        left = -1 if x - 1 < -half_width else (0 if self.original_points[self.pos_to_state((x - 1, y))] in self.visited_points else 1)
+
+        return (top, right, bottom, left)
 
     def plot_path(self, path):
         self.clear_path()

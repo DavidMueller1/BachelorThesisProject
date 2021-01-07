@@ -38,7 +38,7 @@ def visualize_best_path_deep_q(world, params: DeepQParameters, target_net):
         combined_state = np.asarray(world.agent_pos + world.get_agent_adjacent_heights()).astype(np.float32)
         # with T.no_grad():
             # action = target_net(torch.tensor(state_coords).to(device)).argmax(dim=0).to(device)
-        observation = np.append(world.get_state_for_deep_q(), np.array(params.max_steps_per_episode, dtype=np.float32))
+        observation = world.get_state_for_deep_q(step=step, max_steps=params.max_steps_per_episode)
         # observation = world.get_state_for_deep_q()
         state = T.tensor([observation]).to(target_net.device)
         actions = target_net.forward(state)

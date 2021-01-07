@@ -37,6 +37,25 @@ class DeepQNetwork(nn.Module):
         x = F.leaky_relu(self.fc1(state))
         x = F.leaky_relu(self.fc2(x))
         x = F.leaky_relu(self.fc3(x))
+
+        # x = F.relu(self.fc1(state))
+        # x = F.relu(self.fc2(x))
+        # x = F.relu(self.fc3(x))
+
+        # x = F.gelu(self.fc1(state))
+        # x = F.gelu(self.fc2(x))
+        # x = F.gelu(self.fc3(x))
+
+        # x = F.gelu(self.fc1(state))
+        # x = F.gelu(self.fc2(x))
+        # x = T.sigmoid(self.fc3(x))
+
+        # x = T.sigmoid(self.fc1(state))
+        # x = T.sigmoid(self.fc2(x))
+        # x = T.sigmoid(self.fc3(x))
+
+        # x = F.relu(self.fc1(state))
+        # x = F.relu(self.fc2(x))
         actions = self.out(x)
 
         return actions
@@ -139,7 +158,7 @@ class Agent():
 def train(width: int, length: int, params: DeepQParameters, environment, visualize=False, show_path_interval=20, plot=True, plot_interval=10, plot_moving_avg_period=100):
 
     # agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
-    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [10], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
+    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [13], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
     # time_estimater = TimeEstimater(params.num_episodes)
 
     scores, eps_history = [], []
@@ -152,7 +171,7 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
         # done = False
         environment.reset_agent()
         # observation = environment.get_state_for_deep_q()
-        observation = np.append(environment.get_state_for_deep_q(), np.array(params.max_steps_per_episode, dtype=np.float32))
+        observation = environment.get_state_for_deep_q(step=0, max_steps=params.max_steps_per_episode)
 
         path = []
         for step in range(params.max_steps_per_episode):
@@ -163,7 +182,8 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
             # state, reward, done = environment.agent_perform_action(action, step == params.max_steps_per_episode - 1)
             path.append(state)
             # observation_ = environment.get_state_for_deep_q()
-            observation_ = np.append(environment.get_state_for_deep_q(), np.array(params.max_steps_per_episode - step, dtype=np.float32))
+            # observation_ = np.append(environment.get_state_for_deep_q(), np.array(params.max_steps_per_episode - step, dtype=np.float32))
+            observation_ = environment.get_state_for_deep_q(step=step, max_steps=params.max_steps_per_episode)
             # Logger.debug("Observation:", observation)
             # observation_, reward, done, info = env.step(action)
             score += reward
