@@ -60,6 +60,23 @@ def get_average(values, period):
         return np.zeros(len(values))
 
 
+def plot_result(values, title, average_period=100):
+    plt.figure(3)
+    plt.clf()
+    plt.title("Average reward per " + str(average_period) + " episodes")
+    plt.xlabel("Episode")
+    plt.ylabel("Reward")
+    plt.plot(get_average(values, average_period), label=title)
+    plt.legend(loc='lower right')
+    # plt.subplots_adjust(bottom=0.2)
+    # plt.gcf().text(0.02, -0.1, "Exploration rate: " + str(exploration_rate), fontsize=12)
+    # plt.annotate("Test", [0, -20])
+    # plt.text(0.02, 0.025, "Exploration rate: %.2f" % exploration_rate, fontsize=10, transform=plt.gcf().transFigure)
+    # plt.autoscale()
+    # plt.show()
+    plt.show()
+
+
 def plot_comparison(values, titles, average_period=100):
     plt.figure(3)
     plt.clf()

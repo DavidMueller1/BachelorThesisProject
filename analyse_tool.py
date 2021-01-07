@@ -1,5 +1,5 @@
 from tkinter import *
-from combine_results_util import compare_results
+from combine_results_util import compare_results, combine_results
 from logger import Logger
 
 
@@ -25,14 +25,17 @@ class AnalyseApp:
         self.separator_2 = Frame(master, height=1, width=250, bg="black")
         self.separator_2.pack(pady=10)
 
-        self.combine_button = Button(master, text="Get average from multiple results", command=self.compare)
+        self.combine_button = Button(master, text="Get average from multiple results", command=self.combine)
         self.combine_button.pack()
+
+        self.combine_title = Entry(master)
+        self.combine_title.pack()
 
     def compare(self):
         compare_results(custom_titles=(self.custom_titles.get() == 1))
 
     def combine(self):
-        compare_results()
+        combine_results(title=self.combine_title.get())
 
 
 root = Tk()
