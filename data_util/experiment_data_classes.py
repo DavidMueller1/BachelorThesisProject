@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import numpy as np
 from rl_algorithms.deep_q import DQN
+from rl_algorithms.deep_q_2 import BasicNetwork
 
 
 @dataclass
@@ -56,7 +57,7 @@ class Learned:
 
 @dataclass
 class LearnedDeepQ:
-    network: DQN
+    network: BasicNetwork
     parameters: Parameters
 
 

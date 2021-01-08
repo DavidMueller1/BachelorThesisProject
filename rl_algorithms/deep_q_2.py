@@ -7,10 +7,15 @@ from util.time_estimate import TimeEstimater
 import time
 from logger import Logger
 from plot_util import plot_progress
-from data_util.experiment_data_classes import DeepQParameters
+# from data_util.experiment_data_classes import DeepQParameters
 
 
-class DeepQNetwork(nn.Module):
+class BasicNetwork(nn.Module):
+    def __init__(self):
+        super(BasicNetwork, self).__init__()
+
+
+class DeepQNetwork(BasicNetwork):
     def __init__(self, learning_rate, input_dims, fc1_dims, fc2_dims, n_actions):
         super(DeepQNetwork, self).__init__()
         self.learning_rate = learning_rate
@@ -22,9 +27,9 @@ class DeepQNetwork(nn.Module):
         self.n_actions = n_actions
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
-        self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
+        # self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         # self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
-        self.out = nn.Linear(self.fc2_dims, self.n_actions)
+        self.out = nn.Linear(self.fc1_dims, self.n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
         self.loss = nn.MSELoss()
@@ -52,7 +57,7 @@ class DeepQNetwork(nn.Module):
         # x = T.sigmoid(self.fc3(x))
 
         x = T.sigmoid(self.fc1(state))
-        x = T.sigmoid(self.fc2(x))
+        # x = T.sigmoid(self.fc2(x))
         # x = T.sigmoid(self.fc3(x))
 
         # x = F.relu(self.fc1(state))
@@ -156,7 +161,7 @@ class Agent():
         self.epsilon = self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
 
 
-def train(width: int, length: int, params: DeepQParameters, environment, visualize=False, show_path_interval=20, plot=True, plot_interval=10, plot_moving_avg_period=100):
+def train(width: int, length: int, params, environment, visualize=False, show_path_interval=20, plot=True, plot_interval=10, plot_moving_avg_period=100):
 
     # agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
     agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
@@ -184,7 +189,7 @@ def train(width: int, length: int, params: DeepQParameters, environment, visuali
             path.append(state)
             # observation_ = environment.get_state_for_deep_q()
             # observation_ = np.append(environment.get_state_for_deep_q(), np.array(params.max_steps_per_episode - step, dtype=np.float32))
-            observation_ = environment.get_state_for_deep_q(step=step, max_steps=params.max_steps_per_episode)
+            observation_ = environment.get_state_for_deep_q(step=step, max_steps=params.max_steps_perU_episode)
             # Logger.debug("Observation:", observation)
             # observation_, reward, done, info = env.step(action)
             score += reward

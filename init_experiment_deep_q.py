@@ -88,8 +88,8 @@ Logger.status("Beginning training...")
 # )
 
 params = DeepQParameters(
-    num_episodes=1000,
-    max_steps_per_episode=60,
+    num_episodes=800,
+    max_steps_per_episode=100,
     # replay_buffer_size=60000,
     replay_buffer_size=20000,
     # batch_size=64,
@@ -104,7 +104,7 @@ params = DeepQParameters(
     start_exploration_rate=1,
     max_exploration_rate=1,
     min_exploration_rate=0.01,
-    exploration_decay_rate=0.004,
+    exploration_decay_rate=0.003,
 
     rewards_all_episodes=[],
     max_rewards_all_episodes=[],
@@ -122,14 +122,14 @@ Logger.status("Training done.")
 # Logger.info("Zeros in q_table: ", q_table.size - np.count_nonzero(q_table), "/", q_table.size)
 # Logger.info("Non-Zeros in q_table: ", np.count_nonzero(q_table))
 
-Logger.status("Showing best learned path...")
-while True:
-    time.sleep(3)
-    world.clear_path()
-    visualize_best_path_deep_q(world, params, target_net)
-    Logger.input("Show again? (y/n)")
-    if input() == "n":
-        break
+# Logger.status("Showing best learned path...")
+# while True:
+#     time.sleep(3)
+#     world.clear_path()
+#     visualize_best_path_deep_q(world, params, target_net)
+#     Logger.input("Show again? (y/n)")
+#     if input() == "n":
+#         break
 
 
 Logger.input("Would you like to save the Target-Net and the Params? (y/n)")

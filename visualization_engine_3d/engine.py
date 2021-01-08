@@ -7,7 +7,7 @@ from data_util.experiment_data_classes import Terrain
 import copy
 import numpy as np
 
-HEIGHT_MULTIPLIKATOR = 100
+HEIGHT_MULTIPLIKATOR = 40
 VISITED_MULTIPLIKATOR = 10
 DISTANCE_MULTIPLIKATOR = 1
 
@@ -319,7 +319,8 @@ class Engine3D:
         # return self.get_agent_state(), self.get_reward_via_visited_points(is_last_action), done
         # return self.get_agent_state(), self.get_reward_via_visited_points(is_last_action) - (self.get_reward_via_distance_from_start() if is_last_action else 0), done
         # return self.get_agent_state(), VISITED_MULTIPLIKATOR if new_point else 0, done
-        return self.get_agent_state(), (VISITED_MULTIPLIKATOR if new_point else 0) - self.get_reward_via_distance_from_start(), done
+        return self.get_agent_state(), (VISITED_MULTIPLIKATOR if new_point else 0) - self.get_reward_via_distance_from_start(), done # WORKING 1
+        # return self.get_agent_state(), (VISITED_MULTIPLIKATOR if new_point else 0) - self.get_reward_via_distance_from_start() + self.get_reward_via_delta(last_state), done # ADDING DELTA HEIGHT
         # return self.get_agent_state(), self.get_reward_via_finish()
         # return self.get_agent_state(), self.points[self.get_agent_state()].z
         # return self.get_agent_state(), self.get_reward_via_delta(last_state) + (VISITED_MULTIPLIKATOR if new_point else 0), done
@@ -369,7 +370,8 @@ class Engine3D:
         # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32)
         # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos + adjacent_visited + steps_left, dtype=np.float32)
         # return np.asarray(relative_pos + heights + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32)
-        return np.asarray(relative_pos + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32)
+        # return np.asarray(relative_pos + heights + adjacent_visited + steps_left + (max_steps if max_steps else 0, ) + self.highest_point_vistited_pos, dtype=np.float32)
+        return np.asarray(relative_pos + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32) # WORKING 1
 
     def get_agent_height(self):
         return self.original_points[self.get_agent_state()][2]
@@ -386,7 +388,7 @@ class Engine3D:
         return (self.get_agent_height() * HEIGHT_MULTIPLIKATOR, top, right, bottom, left)
 
     def get_agent_adjacent_visited(self):
-        mul = 10
+        mul = VISITED_MULTIPLIKATOR
         (x, y) = self.agent_pos
         half_width = self.terrain.width / 2
         half_height = self.terrain.length / 2
