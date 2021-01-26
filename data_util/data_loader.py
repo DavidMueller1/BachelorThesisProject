@@ -1,5 +1,7 @@
 import dill
 from data_util.experiment_data_classes import LearnedForSpecificTerrain
+import os
+from logger import Logger
 import visualization_engine_3d.engine as render_engine
 from terrain_generator import random_terrain_generator
 import random
@@ -8,16 +10,18 @@ import time
 
 
 def load_terrain(file: str):
-    with open("data/terrain/" + file, 'rb') as file:
+    os.chdir(os.path.dirname(__file__))
+    with open("../data/terrain/" + file, 'rb') as file:
         return dill.load(file)
 
 
 def load_learned_with_terrain(file: str):
     # with open("data/learned/" + file, 'rb') as file:
+    os.chdir(os.path.dirname(__file__))
     with open(file, 'rb') as file:
         data: LearnedForSpecificTerrain = dill.load(file)
 
-    with open("data/terrain/" + data.terrainFile, 'rb') as terrain_file:
+    with open("../data/terrain/" + data.terrainFile, 'rb') as terrain_file:
         return data.learned, dill.load(terrain_file)
 
 

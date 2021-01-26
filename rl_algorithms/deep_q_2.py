@@ -7,6 +7,7 @@ from util.time_estimate import TimeEstimater
 import time
 from logger import Logger
 from plot_util import plot_progress
+from plot_util import get_current_average
 # from data_util.experiment_data_classes import DeepQParameters
 
 
@@ -27,9 +28,9 @@ class DeepQNetwork(BasicNetwork):
         self.n_actions = n_actions
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
-        # self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
+        self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         # self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
-        self.out = nn.Linear(self.fc1_dims, self.n_actions)
+        self.out = nn.Linear(self.fc2_dims, self.n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
         self.loss = nn.MSELoss()
@@ -56,8 +57,12 @@ class DeepQNetwork(BasicNetwork):
         # x = F.gelu(self.fc2(x))
         # x = T.sigmoid(self.fc3(x))
 
+        # x = T.sigmoid(self.fc1(state))
+        # x = F.relu(self.fc2(x))
+        # x = T.sigmoid(self.fc3(x))
+
         x = T.sigmoid(self.fc1(state))
-        # x = T.sigmoid(self.fc2(x))
+        x = T.sigmoid(self.fc2(x))
         # x = T.sigmoid(self.fc3(x))
 
         # x = F.relu(self.fc1(state))
@@ -85,6 +90,8 @@ class Agent():
         self.policy_net.train()
         self.target_net = DeepQNetwork(self.learning_rate, n_actions=n_actions, input_dims=input_dims, fc1_dims=256, fc2_dims=256)
         self.target_net.eval()
+        self.best_net = DeepQNetwork(self.learning_rate, n_actions=n_actions, input_dims=input_dims, fc1_dims=256, fc2_dims=256)
+        self.best_net.eval()
 
         self.state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
         self.new_state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
@@ -158,7 +165,10 @@ class Agent():
             # layer_2_values.append(target_net.fc2.weight.cpu().data.numpy())
             # layer_out_values.append(target_net.out.weight.cpu().data.numpy())
 
-        self.epsilon = self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
+        # self.epsilon = self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
+        # Logger.debug("EPS_MIN:", self.eps_min)
+        # Logger.debug("EPSILON:", self.epsilon)
+        # Logger.debug("========================================")
 
 
 def train(width: int, length: int, params, environment, visualize=False, show_path_interval=20, plot=True, plot_interval=10, plot_moving_avg_period=100):
@@ -168,7 +178,7 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
     # time_estimater = TimeEstimater(params.num_episodes)
 
     scores, eps_history = [], []
-    n_games = 1500
+    max_average = -99999
 
     time_estimater = TimeEstimater(params.num_episodes)
 
@@ -189,7 +199,7 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
             path.append(state)
             # observation_ = environment.get_state_for_deep_q()
             # observation_ = np.append(environment.get_state_for_deep_q(), np.array(params.max_steps_per_episode - step, dtype=np.float32))
-            observation_ = environment.get_state_for_deep_q(step=step, max_steps=params.max_steps_perU_episode)
+            observation_ = environment.get_state_for_deep_q(step=step, max_steps=params.max_steps_per_episode)
             # Logger.debug("Observation:", observation)
             # observation_, reward, done, info = env.step(action)
             score += reward
@@ -213,7 +223,9 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
         scores.append(score)
         eps_history.append(agent.epsilon)
 
-        agent.epsilon = params.min_exploration_rate + (
+        # agent.epsilon = 0
+
+        agent.epsilon = params.min_exploration_rate if params.min_exploration_rate == agent.epsilon else params.min_exploration_rate + (
                 params.max_exploration_rate - params.min_exploration_rate) * np.exp(
             -params.exploration_decay_rate * episode)
 
@@ -222,7 +234,13 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
         # print('Episode', episode, 'Score %.2f' % score, 'Average score %.2f' % avg_score,
         #       'Epsilon %.2f' % agent.epsilon)
         if plot and episode % plot_interval == 0:
-            plot_progress(scores, agent.epsilon, average_period=plot_moving_avg_period, time_left=time_estimater.get_time_left(episode))
+            plot_progress(scores, agent.epsilon, average_period=plot_moving_avg_period, time_left=time_estimater.get_time_left(episode), epsilon=eps_history, epsilon_fac=500)
+
+        current_average = get_current_average(values=scores, period=plot_moving_avg_period)
+        if max_average < current_average:
+            max_average = current_average
+            agent.best_net.load_state_dict(agent.policy_net.state_dict())
 
     params.rewards_all_episodes = scores
-    return agent.target_net, params
+    params.max_reward_average = max_average
+    return agent.best_net, params

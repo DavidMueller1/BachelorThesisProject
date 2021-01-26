@@ -29,7 +29,7 @@ def plot_network_layer(figure_num, title, layer_values, current_episode):
     plt.pause(0.00001)
 
 
-def plot_progress(values, exploration_rate=False, average_period=100, time_left=False):
+def plot_progress(values, exploration_rate=False, average_period=100, time_left=False, epsilon=False, epsilon_fac=1):
     plt.figure(2)
     plt.clf()
     plt.title("Training...")
@@ -37,6 +37,8 @@ def plot_progress(values, exploration_rate=False, average_period=100, time_left=
     plt.ylabel("Reward")
     plt.plot(values, label="Reward in episode x")
     plt.plot(get_average(values, average_period), label="Average reward per " + str(average_period) + " episodes")
+    if epsilon:
+        plt.plot(np.asarray(epsilon) * epsilon_fac, label="Epsilon with factor %d in episode x" % epsilon_fac)
     plt.legend(loc='lower right')
     plt.subplots_adjust(bottom=0.2)
     # plt.gcf().text(0.02, -0.1, "Exploration rate: " + str(exploration_rate), fontsize=12)
@@ -58,6 +60,13 @@ def get_average(values, period):
         return np.concatenate((np.zeros(period), (cumsum[period:] - cumsum[:-period]) / float(period)))
     else:
         return np.zeros(len(values))
+
+
+def get_current_average(values, period):
+    if len(values) >= period:
+        return sum(values[-period:]) / float(period)
+    else:
+        return 0
 
 
 def plot_result(values, title, average_period=100):

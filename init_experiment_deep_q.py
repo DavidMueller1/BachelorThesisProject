@@ -88,7 +88,7 @@ Logger.status("Beginning training...")
 # )
 
 params = DeepQParameters(
-    num_episodes=800,
+    num_episodes=600,
     max_steps_per_episode=100,
     # replay_buffer_size=60000,
     replay_buffer_size=20000,
@@ -101,13 +101,17 @@ params = DeepQParameters(
     discount_rate=0.999,
     target_update=25,
 
+    # start_exploration_rate=0.2,
     start_exploration_rate=1,
     max_exploration_rate=1,
+    # min_exploration_rate=0.2,
     min_exploration_rate=0.01,
+    # exploration_decay_rate=0,
     exploration_decay_rate=0.003,
 
     rewards_all_episodes=[],
     max_rewards_all_episodes=[],
+    max_reward_average=0
 )
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -151,6 +155,6 @@ while True:
     Logger.input("Show again? (y/n)")
     if input() == "n":
         break
-    time.sleep(3)
+    # time.sleep(3)
     visualize_best_path_deep_q(world, params, target_net)
 

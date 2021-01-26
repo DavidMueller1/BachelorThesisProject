@@ -38,6 +38,7 @@ class DeepQParameters:
 
     rewards_all_episodes: list
     max_rewards_all_episodes: list
+    max_reward_average: float
 
 
 @dataclass
@@ -58,7 +59,7 @@ class Learned:
 @dataclass
 class LearnedDeepQ:
     network: BasicNetwork
-    parameters: Parameters
+    parameters: DeepQParameters
 
 
 @dataclass
