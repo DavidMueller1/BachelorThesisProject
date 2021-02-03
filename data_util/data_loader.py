@@ -25,6 +25,12 @@ def load_learned_with_terrain(file: str):
         return data.learned, dill.load(terrain_file)
 
 
+def load_massive_result_data(file_name: str):
+    os.chdir(os.path.dirname(__file__))
+    with open(file_name, 'rb') as file:
+        return dill.load(file)
+
+
 # print("Which file would you like to open?")
 # file_name = input()
 # with open("data/" + file_name, 'rb') as f:

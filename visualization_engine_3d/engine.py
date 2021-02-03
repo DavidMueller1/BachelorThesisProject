@@ -6,10 +6,22 @@ import random
 from data_util.experiment_data_classes import Terrain
 import copy
 import numpy as np
+from enum import Enum
 
+
+class Rewards(Enum):
+    Default = 0
+    Spiral = 1
+    Delta = 2
+    DeltaVisited = 3
+    DeltaVisitedDistance = 4
+
+
+# For Spiral:
 HEIGHT_MULTIPLIKATOR = 40
 VISITED_MULTIPLIKATOR = 10
 DISTANCE_MULTIPLIKATOR = 1
+
 
 class Engine3D:
 
@@ -157,7 +169,7 @@ class Engine3D:
                 triangle.append('gray')
             self.triangles.append(visualization_engine_3d.face.Face(triangle))
             
-    def __init__(self, terrain: Terrain, agent_pos=(0, 0), width=1000, height=700, distance=6, scale=100, title='3D', background='white', manual_control=False, random_spawn=False):
+    def __init__(self, terrain: Terrain, agent_pos=(0, 0), width=1000, height=700, distance=6, scale=100, title='3D', background='white', manual_control=False, random_spawn=False, reward_val=Rewards.Default):
         # object parameters
         self.distance = distance
         self.scale = scale
@@ -219,6 +231,14 @@ class Engine3D:
         self.agent_same_pos_counter = 0
         self.agent_shape = None
         self.path_shapes = []
+
+        self.reward_fun = {
+            Rewards.Default: self.get_reward_via_delta,
+            Rewards.Spiral: self.get_reward_spiral,
+            Rewards.Delta: self.get_reward_via_delta,
+            Rewards.DeltaVisitedDistance: self.get_reward_via_delta
+        }
+        self.reward_val = reward_val
 
         if manual_control:
             self.screen.window.bind('<Up>', self.__agent_move_up)
@@ -292,7 +312,7 @@ class Engine3D:
         (x, y) = self.agent_pos
         last_state = self.get_agent_state()
 
-        done = False
+        done = is_last_action
         if action == 0:
             self.agent_pos = (max(-self.grid_width / 2, x - 1), y)
         if action == 1:
@@ -311,6 +331,7 @@ class Engine3D:
             new_point = True
             self.visited_points.append(self.original_points[self.get_agent_state()])
 
+        return self.get_agent_state(), self.reward_fun[self.reward_val](last_state, new_point), done
 
         # if action == 4:
         #     done = True
@@ -319,31 +340,38 @@ class Engine3D:
         # return self.get_agent_state(), self.get_reward_via_visited_points(is_last_action), done
         # return self.get_agent_state(), self.get_reward_via_visited_points(is_last_action) - (self.get_reward_via_distance_from_start() if is_last_action else 0), done
         # return self.get_agent_state(), VISITED_MULTIPLIKATOR if new_point else 0, done
-        return self.get_agent_state(), (VISITED_MULTIPLIKATOR if new_point else 0) - self.get_reward_via_distance_from_start(), done # WORKING 1
-        # return self.get_agent_state(), (VISITED_MULTIPLIKATOR if new_point else 0) - self.get_reward_via_distance_from_start() + self.get_reward_via_delta(last_state), done # ADDING DELTA HEIGHT
+        # return self.get_agent_state(), (VISITED_MULTIPLIKATOR if new_point else 0) - self.get_reward_via_distance_from_start(), done # WORKING 1
+        # return self.get_agent_state(), (-VISITED_MULTIPLIKATOR if not new_point else 0) - self.get_reward_via_distance_from_start() + self.get_reward_via_delta(last_state), done # ADDING DELTA HEIGHT
         # return self.get_agent_state(), self.get_reward_via_finish()
         # return self.get_agent_state(), self.points[self.get_agent_state()].z
         # return self.get_agent_state(), self.get_reward_via_delta(last_state) + (VISITED_MULTIPLIKATOR if new_point else 0), done
         # return self.get_agent_state(), self.get_reward_via_delta(last_state) + (VISITED_MULTIPLIKATOR if new_point else 0), done
 
+    def get_reward_spiral(self, last_state, new_point):
+        return self.get_reward_via_visited(last_state, new_point) - self.get_reward_via_distance_from_start()
+
+    def get_reward_via_delta(self, last_state, new_point):
+        # return self.points[self.get_agent_state()].z * HEIGHT_MULTIPLIKATOR - self.points[last_state].z * HEIGHT_MULTIPLIKATOR
+        return self.original_points[self.get_agent_state()][2] * HEIGHT_MULTIPLIKATOR - self.original_points[last_state][2] * HEIGHT_MULTIPLIKATOR
+
+    def get_reward_delta_visited_distance(self, last_state, new_point):
+        return self.get_reward_via_delta(last_state, new_point) + self.get_reward_via_visited(last_state, new_point) - self.get_reward_via_distance_from_start()
+
     def get_reward_via_end_state(self, is_last_state):
         # return self.points[self.get_agent_state()].z if is_last_state else 0
-        return (self.highest_point_vistited_height - self.get_agent_height()) * HEIGHT_MULTIPLIKATOR + len(self.visited_points) * VISITED_MULTIPLIKATOR if is_last_state else 0
+        return (self.points[self.get_agent_state()].z - self.points[self.pos_to_state(self.agent_start_pos)].z) * HEIGHT_MULTIPLIKATOR if is_last_state else 0
+        # return (self.highest_point_vistited_height - self.get_agent_height()) * HEIGHT_MULTIPLIKATOR + len(self.visited_points) * VISITED_MULTIPLIKATOR if is_last_state else 0
 
     def get_reward_via_visited_points(self, is_last_state):
         return len(self.visited_points) * VISITED_MULTIPLIKATOR if is_last_state else 0
         # return len(self.visited_points) * VISITED_MULTIPLIKATOR
 
+    def get_reward_via_visited(self, last_state, new_point):
+        return VISITED_MULTIPLIKATOR if new_point else 0
+
     def get_reward_via_distance_from_start(self):
         # return len(self.visited_points) if is_last_state else 0
         return self.get_agent_distance_from_spawn() * DISTANCE_MULTIPLIKATOR
-
-    def get_reward_via_delta(self, last_state):
-        # return self.points[self.get_agent_state()].z * HEIGHT_MULTIPLIKATOR - self.points[last_state].z * HEIGHT_MULTIPLIKATOR
-        return self.original_points[self.get_agent_state()][2] * HEIGHT_MULTIPLIKATOR - self.original_points[last_state][2] * HEIGHT_MULTIPLIKATOR
-
-    # def get_reward_via_start_delta(self, is_last_state):
-    #     return self.original_points[self.get_agent_state()][2] * HEIGHT_MULTIPLIKATOR - self.original_points[last_state][2] * HEIGHT_MULTIPLIKATOR
 
     def get_reward_via_delta_punish_negative(self, last_state):
         reward = self.original_points[self.get_agent_state()][2] - self.original_points[last_state][2]
@@ -367,6 +395,7 @@ class Engine3D:
         # return np.asarray(tuple(heights[0] - x for x in heights), dtype=np.float32)
         # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32)
         # return np.append(np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32), np.array(self.highest_point_vistited_height * HEIGHT_MULTIPLIKATOR, dtype=np.float32))
+        # return np.append(np.asarray(relative_pos + heights + self.highest_point_vistited_pos + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32), np.array(self.highest_point_vistited_height * HEIGHT_MULTIPLIKATOR, dtype=np.float32))
         # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32)
         # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos + adjacent_visited + steps_left, dtype=np.float32)
         # return np.asarray(relative_pos + heights + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32)

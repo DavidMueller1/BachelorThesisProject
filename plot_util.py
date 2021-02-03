@@ -29,7 +29,7 @@ def plot_network_layer(figure_num, title, layer_values, current_episode):
     plt.pause(0.00001)
 
 
-def plot_progress(values, exploration_rate=False, average_period=100, time_left=False, epsilon=False, epsilon_fac=1):
+def plot_progress(values, exploration_rate=False, average_period=100, time_left=False, reward_val=False, epsilon=False, epsilon_fac=1):
     plt.figure(2)
     plt.clf()
     plt.title("Training...")
@@ -48,10 +48,46 @@ def plot_progress(values, exploration_rate=False, average_period=100, time_left=
         text += "Exploration rate: %.2f" % exploration_rate
     if time_left:
         text += "\nTime left: " + str(time_left).split(".")[0]
+    if reward_val:
+        text += "\nReward: " + reward_val.name
     plt.text(0.02, 0.025, text, fontsize=10, transform=plt.gcf().transFigure)
     # plt.autoscale()
     # plt.show()
     plt.pause(0.00001)
+
+
+def plot_mean_with_std(result_data, title="Mean with Std", period=100):
+    mean, std = get_moving_average_mean_and_std(result_data, period)
+    std_upper = mean + std / 2
+    std_lower = mean - std / 2
+
+    # plt.figure(2)
+    # plt.clf()
+    plt.title(title)
+    plt.xlabel("Episode")
+    plt.ylabel("Reward")
+    plt.plot(mean, label="Average Reward in episode x")
+    x = np.arange(0, mean.size, 1)
+    print(x)
+    plt.fill_between(x, std_upper, std_lower, alpha=0.3)
+    plt.show()
+
+
+def plot_mean_with_std_multiple(result_datas, titles, title="Mean with Std", period=100):
+    # plt.figure(2)
+    # plt.clf()
+    plt.title(title)
+    plt.xlabel("Episode")
+    plt.ylabel("Reward")
+    for index, result_data in enumerate(result_datas):
+        mean, std = get_moving_average_mean_and_std(result_data, period)
+        std_upper = mean + std / 2
+        std_lower = mean - std / 2
+        plt.plot(mean, label=titles[index])
+        x = np.arange(0, mean.size, 1)
+        plt.fill_between(x, std_upper, std_lower, alpha=0.3)
+    plt.legend(loc='lower right')
+    plt.show()
 
 
 def get_average(values, period):
@@ -60,6 +96,17 @@ def get_average(values, period):
         return np.concatenate((np.zeros(period), (cumsum[period:] - cumsum[:-period]) / float(period)))
     else:
         return np.zeros(len(values))
+
+
+def get_moving_average_mean_and_std(values, period):
+    moving_avg_vals = []
+    for experiment in values:
+        moving_avg_vals.append(get_average(experiment, period))
+
+    data_np = np.array(moving_avg_vals)
+    mean = data_np.mean(0)
+    std = data_np.std(0)
+    return mean, std
 
 
 def get_current_average(values, period):

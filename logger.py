@@ -1,3 +1,4 @@
+from datetime import datetime
 
 class LogColors:
     INPUT = '\033[95m'
@@ -28,3 +29,7 @@ class Logger:
     @staticmethod
     def input(*args):
         print(LogColors.INPUT + "[INPUT]" + LogColors.END + " -", *args)
+
+    @staticmethod
+    def error(*args):
+        print(LogColors.FAIL + "[ERROR]" + LogColors.END + " " + datetime.now().strftime("%H:%M:%S") + " -", *args)

@@ -8,6 +8,7 @@ import time
 from logger import Logger
 from plot_util import plot_progress
 from plot_util import get_current_average
+from visualization_engine_3d.engine import Rewards
 # from data_util.experiment_data_classes import DeepQParameters
 
 
@@ -29,9 +30,9 @@ class DeepQNetwork(BasicNetwork):
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
-        # self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
+        self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
         # self.fc4 = nn.Linear(self.fc3_dims, self.fc4_dims)
-        self.out = nn.Linear(self.fc2_dims, self.n_actions)
+        self.out = nn.Linear(self.fc3_dims, self.n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
         self.loss = nn.MSELoss()
@@ -64,9 +65,10 @@ class DeepQNetwork(BasicNetwork):
 
         x = T.sigmoid(self.fc1(state))
         x = T.sigmoid(self.fc2(x))
-        # x = T.sigmoid(self.fc3(x))
+        x = T.sigmoid(self.fc3(x))
         # x = T.sigmoid(self.fc4(x))
         # x = T.sigmoid(self.fc3(x))
+
 
         # x = F.relu(self.fc1(state))
         # x = F.relu(self.fc2(x))
@@ -177,7 +179,7 @@ class Agent():
 def train(width: int, length: int, params, environment, visualize=False, show_path_interval=20, plot=True, plot_interval=10, plot_moving_avg_period=100):
 
     # agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
-    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
+    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [15], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
     # time_estimater = TimeEstimater(params.num_episodes)
 
     scores, eps_history = [], []
@@ -237,13 +239,16 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
         # print('Episode', episode, 'Score %.2f' % score, 'Average score %.2f' % avg_score,
         #       'Epsilon %.2f' % agent.epsilon)
         if plot and episode % plot_interval == 0:
-            plot_progress(scores, agent.epsilon, average_period=plot_moving_avg_period, time_left=time_estimater.get_time_left(episode), epsilon=eps_history, epsilon_fac=500)
+            plot_progress(scores, agent.epsilon, average_period=plot_moving_avg_period, time_left=time_estimater.get_time_left(episode), reward_val=environment.reward_val, epsilon=eps_history, epsilon_fac=500)
 
-        # current_average = get_current_average(values=scores, period=plot_moving_avg_period)
-        # if max_average < current_average or episode == plot_moving_avg_period:
-        #     max_average = current_average
-        #     # Logger.info("New max average:", max_average)
-        #     agent.best_net.load_state_dict(agent.policy_net.state_dict())
+        current_average = get_current_average(values=scores, period=plot_moving_avg_period)
+        if max_average < current_average or episode == plot_moving_avg_period:
+            max_average = current_average
+            Logger.info("New max average:", max_average)
+            agent.best_net.load_state_dict(agent.policy_net.state_dict())
+
+            if max_average > 50:
+                environment.reward_val = Rewards.DeltaVisitedDistance
 
 
     params.rewards_all_episodes = scores

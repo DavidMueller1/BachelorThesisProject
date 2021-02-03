@@ -1,5 +1,5 @@
 from tkinter import *
-from combine_results_util import compare_results, combine_results
+from combine_results_util import compare_results, combine_results, compare_massive_results
 from show_experiment_result import show_experiment_result
 from logger import Logger
 
@@ -39,6 +39,17 @@ class AnalyseApp:
         self.custom_titles_checkbox.pack()
 
 
+        self.separator_4 = Frame(master, height=1, width=250, bg="black")
+        self.separator_4.pack(pady=10)
+
+        self.analyse_massive_button = Button(master, text="Compare massive results", command=self.compare_massive)
+        self.analyse_massive_button.pack()
+
+        self.custom_titles_massive = IntVar()
+        self.custom_titles_massive_checkbox = Checkbutton(master, text="Custom titles", variable=self.custom_titles_massive)
+        self.custom_titles_massive_checkbox.pack()
+
+
         self.separator_3 = Frame(master, height=1, width=250, bg="black")
         self.separator_3.pack(pady=10)
 
@@ -54,11 +65,14 @@ class AnalyseApp:
     def compare(self):
         compare_results(custom_titles=(self.custom_titles.get() == 1))
 
+    def compare_massive(self):
+        compare_massive_results(custom_titles=(self.custom_titles_massive.get() == 1))
+
     def combine(self):
         combine_results(title=self.combine_title.get())
 
 
 root = Tk()
-root.geometry("300x300")
+root.geometry("300x400")
 my_gui = AnalyseApp(root)
 root.mainloop()

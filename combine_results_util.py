@@ -1,6 +1,7 @@
 from data_util.data_loader import load_learned_with_terrain
+from data_util.data_loader import load_massive_result_data
 from logger import Logger
-from plot_util import plot_comparison, plot_result
+from plot_util import plot_comparison, plot_result, plot_mean_with_std_multiple
 from tkinter.filedialog import askopenfilenames
 from tkinter import simpledialog
 from operator import add
@@ -29,6 +30,33 @@ def compare_results(custom_titles=False):
         Logger.status("Loaded data-file \"" + file_name + "\".")
 
     plot_comparison(learned_list, learned_titles)
+
+
+def compare_massive_results(custom_titles=False):
+    result_list = []
+    result_datas = []
+    result_titles = []
+
+    Logger.input("Which data-files would you like to open?")
+    file_names = askopenfilenames()
+    if not file_names:
+        return
+    for file_name in file_names:
+        learned = load_massive_result_data(file_name)
+        result_list.append(learned)
+        result_datas.append(learned.result_data)
+
+        if custom_titles:
+            custom_title = simpledialog.askstring(title="Enter title", prompt="Enter title for " + file_name)
+            if custom_title:
+                result_titles.append(custom_title)
+            else:
+                result_titles.append(file_name.split("/")[-1])
+        else:
+            result_titles.append(file_name.split("/")[-1])
+        Logger.status("Loaded data-file \"" + file_name + "\".")
+
+    plot_mean_with_std_multiple(result_datas, result_titles)
 
 
 def combine_results(title=""):

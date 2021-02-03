@@ -1,5 +1,5 @@
 from data_util.experiment_data_classes import DeepQParameters
-from init_experiment_deep_q_class import ExperimentAssistant
+from init_experiment_assistant import ExperimentAssistant
 from logger import Logger
 
 experiment_name = "2021_01_26_different_epsilon_3"
