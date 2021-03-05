@@ -38,6 +38,7 @@ class Agent():
         self.epsilon = epsilon
         self.learning_rate = learning_rate
         self.eps_min = eps_end
+        self.eps_max = epsilon
         self.eps_dec = eps_dec
         self.learning_rate = learning_rate
         self.action_space = [i for i in range(n_actions)]
@@ -56,6 +57,11 @@ class Agent():
         self.action_memory = np.zeros(self.mem_size, dtype=np.int32)
         self.reward_memory = np.zeros(self.mem_size, dtype=np.float32)
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool)
+
+    def calculate_epsilon(self, episode):
+        self.epsilon = self.eps_min if self.eps_min >= self.epsilon else self.eps_min + (
+                self.eps_max - self.eps_min) * np.exp(
+            -self.eps_dec * episode)
 
     def store_transition(self, state, action, reward, state_, done):
         index = self.memory_counter % self.mem_size
@@ -111,4 +117,4 @@ class Agent():
             # layer_2_values.append(target_net.fc2.weight.cpu().data.numpy())
             # layer_out_values.append(target_net.out.weight.cpu().data.numpy())
 
-        self.epsilon = self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
+        # self.epsilon = self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min

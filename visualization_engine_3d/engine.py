@@ -15,6 +15,7 @@ class Rewards(Enum):
     Delta = 2
     DeltaVisited = 3
     DeltaVisitedDistance = 4
+    SpiralEpsilon = 5
 
 
 # For Spiral:
@@ -236,7 +237,8 @@ class Engine3D:
             Rewards.Default: self.get_reward_via_delta,
             Rewards.Spiral: self.get_reward_spiral,
             Rewards.Delta: self.get_reward_via_delta,
-            Rewards.DeltaVisitedDistance: self.get_reward_via_delta
+            Rewards.DeltaVisitedDistance: self.get_reward_via_delta,
+            Rewards.SpiralEpsilon: self.get_reward_for_spiral_with_epsilon
         }
         self.reward_val = reward_val
 
@@ -383,6 +385,9 @@ class Engine3D:
 
     def get_reward_via_finish(self):
         return 1 if self.agent_pos == tuple(self.highest_point[0:2]) else 0
+
+    def get_reward_for_spiral_with_epsilon(self, last_state, new_point):
+        return
 
     def get_state_for_deep_q(self, step=False, max_steps=False,):
         heights = self.get_agent_adjacent_heights()

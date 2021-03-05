@@ -13,6 +13,7 @@ from rl_algorithms import simple
 from rl_algorithms import buffer
 # from rl_algorithms import deep_q
 from rl_algorithms import deep_q_2
+from rl_algorithms import deep_q_2_modified_reward
 from rl_algorithms import deep_q_2_changing_reward
 from rl_algorithms import exploration_as_reward
 from logger import Logger
@@ -107,9 +108,9 @@ params = DeepQParameters(
     target_update=25,
 
     # start_exploration_rate=0.2,
-    start_exploration_rate=1,
-    max_exploration_rate=1,
-    # min_exploration_rate=0.2,
+    start_exploration_rate=0.5,
+    max_exploration_rate=0.5,
+    # min_exploration_rate=1,
     min_exploration_rate=0.001,
     # exploration_decay_rate=0,
     exploration_decay_rate=0.005,
@@ -121,7 +122,11 @@ params = DeepQParameters(
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-target_net, params = deep_q_2.train(width=terrain.width, length=terrain.length, params=params, environment=world,
+# target_net, params = deep_q_2.train(width=terrain.width, length=terrain.length, params=params, environment=world,
+#                         visualize=visualize_training, show_path_interval=show_path_interval, plot=plot_training_progress, plot_interval=plot_interval,
+#                         plot_moving_avg_period=plot_moving_average_period)
+
+target_net, params = deep_q_2_modified_reward.train(width=terrain.width, length=terrain.length, params=params, environment=world,
                         visualize=visualize_training, show_path_interval=show_path_interval, plot=plot_training_progress, plot_interval=plot_interval,
                         plot_moving_avg_period=plot_moving_average_period)
 

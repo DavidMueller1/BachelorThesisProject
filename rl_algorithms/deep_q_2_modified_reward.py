@@ -9,6 +9,7 @@ from logger import Logger
 from plot_util import plot_progress
 from plot_util import get_current_average
 # from data_util.experiment_data_classes import DeepQParameters
+import random
 
 
 class BasicNetwork(nn.Module):
@@ -192,12 +193,20 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
         # observation = environment.get_state_for_deep_q()
         observation = environment.get_state_for_deep_q(step=0, max_steps=params.max_steps_per_episode)
 
+        eps = params.min_exploration_rate if params.min_exploration_rate == agent.epsilon else params.min_exploration_rate + (
+                params.max_exploration_rate - params.min_exploration_rate) * np.exp(
+            -params.exploration_decay_rate * episode)
+
         path = []
         for step in range(params.max_steps_per_episode):
             # Logger.debug("STEP:", step)
             # Logger.debug("----")
             action = agent.choose_action(observation)
             state, reward, done = environment.agent_perform_action(action, is_last_action=(step + 1 == params.max_steps_per_episode))
+
+            # modified_reward = eps * 5 + (1 - eps) * reward
+            # TODO modified_reward = eps * 0 + (1 - eps) * reward
+            modified_reward = eps * random.uniform(0.0, 5.0) + (1 - eps) * reward
 
             # state, reward, done = environment.agent_perform_action(action, step == params.max_steps_per_episode - 1)
             path.append(state)
@@ -207,7 +216,7 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
             # Logger.debug("Observation:", observation)
             # observation_, reward, done, info = env.step(action)
             score += reward
-            agent.store_transition(observation, action, reward, observation_, done)
+            agent.store_transition(observation, action, modified_reward, observation_, done)
             agent.learn(episode)
             observation = observation_
 
@@ -225,13 +234,14 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
                 environment.redraw_agent()
 
         scores.append(score)
-        eps_history.append(agent.epsilon)
+        # eps_history.append(agent.epsilon)
+        eps_history.append(eps)
 
-        # agent.epsilon = 0
+        agent.epsilon = 0
 
-        agent.epsilon = params.min_exploration_rate if params.min_exploration_rate == agent.epsilon else params.min_exploration_rate + (
-                params.max_exploration_rate - params.min_exploration_rate) * np.exp(
-            -params.exploration_decay_rate * episode)
+        # agent.epsilon = params.min_exploration_rate if params.min_exploration_rate == agent.epsilon else params.min_exploration_rate + (
+        #         params.max_exploration_rate - params.min_exploration_rate) * np.exp(
+        #     -params.exploration_decay_rate * episode)
 
         # avg_score = np.mean(scores[-100:])
         #

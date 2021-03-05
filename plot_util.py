@@ -29,7 +29,8 @@ def plot_network_layer(figure_num, title, layer_values, current_episode):
     plt.pause(0.00001)
 
 
-def plot_progress(values, exploration_rate=False, average_period=100, time_left=False, reward_val=False, epsilon=False, epsilon_fac=1):
+def plot_progress(values, exploration_rate=False, average_period=100, time_left=False, reward_val=False, epsilon=False,
+                  epsilon_fac=1):
     plt.figure(2)
     plt.clf()
     plt.title("Training...")
@@ -37,9 +38,13 @@ def plot_progress(values, exploration_rate=False, average_period=100, time_left=
     plt.ylabel("Reward")
     plt.plot(values, label="Reward in episode x")
     plt.plot(get_average(values, average_period), label="Average reward per " + str(average_period) + " episodes")
-    if epsilon:
-        plt.plot(np.asarray(epsilon) * epsilon_fac, label="Epsilon with factor %d in episode x" % epsilon_fac)
     plt.legend(loc='lower right')
+    if epsilon:
+        sec_color = 'tab:cyan'
+        ax2 = plt.twinx()
+        ax2.set_ylabel("Epsilon", color=sec_color)
+        ax2.plot(np.asarray(epsilon), label="Epsilon in episode x", color=sec_color)
+        ax2.tick_params(axis='y', labelcolor=sec_color)
     plt.subplots_adjust(bottom=0.2)
     # plt.gcf().text(0.02, -0.1, "Exploration rate: " + str(exploration_rate), fontsize=12)
     # plt.annotate("Test", [0, -20])
@@ -51,9 +56,37 @@ def plot_progress(values, exploration_rate=False, average_period=100, time_left=
     if reward_val:
         text += "\nReward: " + reward_val.name
     plt.text(0.02, 0.025, text, fontsize=10, transform=plt.gcf().transFigure)
+    # plt.tight_layout()
     # plt.autoscale()
     # plt.show()
     plt.pause(0.00001)
+
+# def plot_progress(values, exploration_rate=False, average_period=100, time_left=False, reward_val=False, epsilon=False, epsilon_fac=1):
+#     plt.figure(2)
+#     plt.clf()
+#     plt.title("Training...")
+#     plt.xlabel("Episode")
+#     plt.ylabel("Reward")
+#     plt.plot(values, label="Reward in episode x")
+#     plt.plot(get_average(values, average_period), label="Average reward per " + str(average_period) + " episodes")
+#     if epsilon:
+#
+#         plt.plot(np.asarray(epsilon) * epsilon_fac, label="Epsilon with factor %d in episode x" % epsilon_fac)
+#     plt.legend(loc='lower right')
+#     plt.subplots_adjust(bottom=0.2)
+#     # plt.gcf().text(0.02, -0.1, "Exploration rate: " + str(exploration_rate), fontsize=12)
+#     # plt.annotate("Test", [0, -20])
+#     text = ""
+#     if exploration_rate:
+#         text += "Exploration rate: %.2f" % exploration_rate
+#     if time_left:
+#         text += "\nTime left: " + str(time_left).split(".")[0]
+#     if reward_val:
+#         text += "\nReward: " + reward_val.name
+#     plt.text(0.02, 0.025, text, fontsize=10, transform=plt.gcf().transFigure)
+#     # plt.autoscale()
+#     # plt.show()
+#     plt.pause(0.00001)
 
 
 def plot_mean_with_std(result_data, title="Mean with Std", period=100):

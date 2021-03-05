@@ -6,11 +6,15 @@ import numpy as np
 from matplotlib import pyplot as plt
 from plot_util import plot_mean_with_std
 
-os.chdir(os.path.dirname(__file__))
-with open("data/learned/2021_02_02_massive_different_epsilon/decaying_epsilon", 'rb') as file:
-    result_data = dill.load(file)
+# os.chdir(os.path.dirname(__file__))
+# with open("data/learned/2021_02_02_massive_different_epsilon/decaying_epsilon", 'rb') as file:
+#     result_data = dill.load(file)
+#
+# plot_mean_with_std(result_data.result_data)
 
-plot_mean_with_std(result_data.result_data)
+eps = 0.001 + ( 1 - 0.001) * np.exp(
+            -0.004 * 2000)
+Logger.debug(eps)
 
 # data = [
 #     [1, 2, 3],
