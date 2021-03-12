@@ -30,14 +30,16 @@ distance = 100
 
 
 # TERRAIN
-terrain_file = "test_2"  # Will generate a new terrain if empty
+# terrain_file = "test_2"  # Will generate a new terrain if empty
+terrain_file = ""  # Will generate a new terrain if empty
 
 terrain_saved = False  # Do not change
 if terrain_file == "":
     Logger.status("Generating new terrain...")
-    terrain: Terrain = generate_random_terrain()
+    # terrain: Terrain = generate_random_terrain()
+    terrain: Terrain = generate_random_terrain(width=50, length=50, n1div=15)
 
-    world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800)
+    world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, manual_control=False)
     world.render()
 
     Logger.input("Would you like to save the new Terrain? (y/n)")

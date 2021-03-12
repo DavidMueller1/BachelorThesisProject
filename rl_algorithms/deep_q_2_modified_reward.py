@@ -180,6 +180,7 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
     # agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
     agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
     # time_estimater = TimeEstimater(params.num_episodes)
+    agent.epsilon = 0
 
     scores, eps_history = [], []
     max_average = -99999
@@ -193,9 +194,13 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
         # observation = environment.get_state_for_deep_q()
         observation = environment.get_state_for_deep_q(step=0, max_steps=params.max_steps_per_episode)
 
-        eps = params.min_exploration_rate if params.min_exploration_rate == agent.epsilon else params.min_exploration_rate + (
+        eps = params.min_exploration_rate + (
                 params.max_exploration_rate - params.min_exploration_rate) * np.exp(
             -params.exploration_decay_rate * episode)
+
+        # eps = params.min_exploration_rate if params.min_exploration_rate == eps else params.min_exploration_rate + (
+        #         params.max_exploration_rate - params.min_exploration_rate) * np.exp(
+        #     -params.exploration_decay_rate * episode)
 
         path = []
         for step in range(params.max_steps_per_episode):
@@ -250,11 +255,11 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
         if plot and episode % plot_interval == 0:
             plot_progress(scores, agent.epsilon, average_period=plot_moving_avg_period, time_left=time_estimater.get_time_left(episode), epsilon=eps_history, epsilon_fac=500)
 
-        # current_average = get_current_average(values=scores, period=plot_moving_avg_period)
-        # if max_average < current_average or episode == plot_moving_avg_period:
-        #     max_average = current_average
-        #     # Logger.info("New max average:", max_average)
-        #     agent.best_net.load_state_dict(agent.policy_net.state_dict())
+        current_average = get_current_average(values=scores, period=plot_moving_avg_period)
+        if max_average < current_average or episode == plot_moving_avg_period:
+            max_average = current_average
+            # Logger.info("New max average:", max_average)
+            agent.best_net.load_state_dict(agent.policy_net.state_dict())
 
 
     params.rewards_all_episodes = scores

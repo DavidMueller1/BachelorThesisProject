@@ -179,6 +179,7 @@ class Engine3D:
         self.highest_point = terrain.highest_point
         self.terrain = terrain
         self.random_spawn = random_spawn
+        random.seed(0)
         Logger.debug("Random Spawn:", self.random_spawn)
 
         # initialize display

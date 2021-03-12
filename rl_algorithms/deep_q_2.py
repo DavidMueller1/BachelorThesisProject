@@ -240,11 +240,11 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
         if plot and episode % plot_interval == 0:
             plot_progress(scores, agent.epsilon, average_period=plot_moving_avg_period, time_left=time_estimater.get_time_left(episode), epsilon=eps_history, epsilon_fac=500)
 
-        # current_average = get_current_average(values=scores, period=plot_moving_avg_period)
-        # if max_average < current_average or episode == plot_moving_avg_period:
-        #     max_average = current_average
-        #     # Logger.info("New max average:", max_average)
-        #     agent.best_net.load_state_dict(agent.policy_net.state_dict())
+        current_average = get_current_average(values=scores, period=plot_moving_avg_period)
+        if max_average < current_average or episode == plot_moving_avg_period:
+            max_average = current_average
+            # Logger.info("New max average:", max_average)
+            agent.best_net.load_state_dict(agent.policy_net.state_dict())
 
 
     params.rewards_all_episodes = scores

@@ -3,18 +3,31 @@ from logger import Logger
 import os
 import dill
 import numpy as np
+import random
+import math
 from matplotlib import pyplot as plt
 from plot_util import plot_mean_with_std
+from visualize_util import visualize_best_path_deep_q
+from terrain_generator.terrain_util import get_environment
 
-# os.chdir(os.path.dirname(__file__))
-# with open("data/learned/2021_02_02_massive_different_epsilon/decaying_epsilon", 'rb') as file:
-#     result_data = dill.load(file)
+# Logger.debug([-1, 1][random.randint(0, 1)])
+a = random.uniform(0, 1)
+Logger.debug(a)
+Logger.debug(math.sqrt(1 - a ** 2))
+
+# terrain_file = "test_2"
+# environment = get_environment(terrain_file=terrain_file)
 #
-# plot_mean_with_std(result_data.result_data)
-
-eps = 0.001 + ( 1 - 0.001) * np.exp(
-            -0.004 * 2000)
-Logger.debug(eps)
+# # os.chdir(os.path.dirname(__file__))
+# # with open("data/learned/2021_02_02_massive_different_epsilon/decaying_epsilon", 'rb') as file:
+# #     result_data = dill.load(file)
+# #
+# # plot_mean_with_std(result_data.result_data)
+#
+# os.chdir(os.path.dirname(__file__))
+# with open("data/learned/new_experiments_path/2021_03_05_decaying_epsilon_start_1/decaying_epsilon_start_1_exp01", 'rb') as file:
+#     single_result_data = dill.load(file)
+# visualize_best_path_deep_q(environment, single_result_data.params, single_result_data.trained_net)
 
 # data = [
 #     [1, 2, 3],

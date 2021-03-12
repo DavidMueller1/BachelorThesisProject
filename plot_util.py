@@ -131,7 +131,7 @@ def get_average(values, period):
         return np.zeros(len(values))
 
 
-def get_moving_average_mean_and_std(values, period):
+def get_moving_average_mean_and_std(values, period=100):
     moving_avg_vals = []
     for experiment in values:
         moving_avg_vals.append(get_average(experiment, period))
@@ -142,7 +142,7 @@ def get_moving_average_mean_and_std(values, period):
     return mean, std
 
 
-def get_current_average(values, period):
+def get_current_average(values, period=100):
     if len(values) >= period:
         return sum(values[-period:]) / float(period)
     else:

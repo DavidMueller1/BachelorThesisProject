@@ -4,17 +4,17 @@ from data_util.experiment_data_classes import Terrain
 from logger import Logger
 
 # PARAMS
-n1div = 5  # landmass distribution
-n1scale = 20  # landmass height
+default_n1div = 5  # landmass distribution
+default_n1scale = 20  # landmass height
 
-width = 10  # map width
-length = 10  # map
+default_width = 10  # map width
+default_length = 10  # map
 
 # frequency = 30
 # amplitude = 20
 
 
-def generate_random_terrain():
+def generate_random_terrain(width=default_width, length=default_length, n1div=default_n1div, n1scale=default_n1scale):
     noise1 = PerlinNoise(width / n1div, length / n1div)
 
     points = []
