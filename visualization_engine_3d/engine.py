@@ -170,7 +170,8 @@ class Engine3D:
                 triangle.append('gray')
             self.triangles.append(visualization_engine_3d.face.Face(triangle))
             
-    def __init__(self, terrain: Terrain, agent_pos=(0, 0), width=1000, height=700, distance=6, scale=100, title='3D', background='white', manual_control=False, random_spawn=False, reward_val=Rewards.Default):
+    def __init__(self, terrain: Terrain, agent_pos=(0, 0), width=1000, height=700, distance=6, scale=100, title='3D',
+                 background='white', manual_control=False, random_spawn=False, reward_val=Rewards.Default):
         # object parameters
         self.distance = distance
         self.scale = scale

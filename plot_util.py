@@ -6,6 +6,7 @@ import time
 from matplotlib import cm
 from logger import Logger
 
+DPI = 96
 
 def plot_network(network):
     # Logger.debug("Test:", network[0].weight.data.numpy())
@@ -30,8 +31,11 @@ def plot_network_layer(figure_num, title, layer_values, current_episode):
 
 
 def plot_progress(values, exploration_rate=False, average_period=100, time_left=False, reward_val=False, epsilon=False,
-                  epsilon_fac=1):
-    plt.figure(2)
+                  epsilon_fac=1, width=False, height=False):
+    if width and height:
+        plt.figure(2, figsize=(width / DPI, height / DPI), dpi=DPI)
+    else:
+        plt.figure(2)
     plt.clf()
     plt.title("Training...")
     plt.xlabel("Episode")

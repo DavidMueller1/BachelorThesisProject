@@ -102,8 +102,44 @@ from terrain_generator.terrain_util import get_environment
 # experiment_handler.start_experiments()
 
 
-folder_name = "2021_03_11_static_epsilon_00"
-file_name = "static_epsilon_00"
+# folder_name = "2021_03_11_static_epsilon_00"
+# file_name = "static_epsilon_00"
+# number_of_experiments = 20
+#
+#
+# params = DeepQParameters(
+#             num_episodes=2200,
+#             max_steps_per_episode=0,
+#             replay_buffer_size=20000,
+#             batch_size=32,
+#
+#             learning_rate=0.001,
+#             discount_rate=0.99,
+#             target_update=10,
+#
+#             # start_exploration_rate=1,
+#             start_exploration_rate=0,
+#             # start_exploration_rate=0.2,
+#             max_exploration_rate=0,
+#             # max_exploration_rate=0.2,
+#             min_exploration_rate=0,
+#             # min_exploration_rate=0.2,
+#             # min_exploration_rate=0,
+#             # exploration_decay_rate=0.004,
+#             exploration_decay_rate=0,
+#
+#             rewards_all_episodes=[],
+#             max_rewards_all_episodes=[],
+#             max_reward_average=0
+#         )
+#
+# experiment_handler = ExperimentSaveRepeatLuna(number_of_experiments=number_of_experiments, dir_name=folder_name, file_name=file_name, params=params, start_number=3)
+# experiment_handler.start_experiments()
+
+
+
+folder_name = "2021_03_11_static_epsilon_02"
+file_name = "static_epsilon_02"
 number_of_experiments = 20
 
 
@@ -118,12 +154,12 @@ params = DeepQParameters(
             target_update=10,
 
             # start_exploration_rate=1,
-            start_exploration_rate=0,
-            # start_exploration_rate=0.2,
-            max_exploration_rate=0,
-            # max_exploration_rate=0.2,
-            min_exploration_rate=0,
-            # min_exploration_rate=0.2,
+            # start_exploration_rate=0,
+            start_exploration_rate=0.2,
+            # max_exploration_rate=0,
+            max_exploration_rate=0.2,
+            # min_exploration_rate=0,
+            min_exploration_rate=0.2,
             # min_exploration_rate=0,
             # exploration_decay_rate=0.004,
             exploration_decay_rate=0,
@@ -133,5 +169,8 @@ params = DeepQParameters(
             max_reward_average=0
         )
 
-experiment_handler = ExperimentSaveRepeatLuna(number_of_experiments=number_of_experiments, dir_name=folder_name, file_name=file_name, params=params)
+experiment_handler = ExperimentSaveRepeatLuna(number_of_experiments=number_of_experiments, dir_name=folder_name,
+                                              file_name=file_name, params=params, start_number=3)
 experiment_handler.start_experiments()
+
+# TODO Check if other experiment is with 0.4 or 0.5
