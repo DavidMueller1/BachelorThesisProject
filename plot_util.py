@@ -8,6 +8,7 @@ from logger import Logger
 
 DPI = 96
 
+
 def plot_network(network):
     # Logger.debug("Test:", network[0].weight.data.numpy())
     Logger.debug("Test:", network.fc1.weight.cpu().data.numpy())
@@ -31,7 +32,14 @@ def plot_network_layer(figure_num, title, layer_values, current_episode):
 
 
 def plot_progress(values, exploration_rate=False, average_period=100, time_left=False, reward_val=False, epsilon=False,
-                  epsilon_fac=1, width=False, height=False):
+                  epsilon_fac=1, width=False, height=False, show=False):
+    first = False
+    if not plt.fignum_exists(2):
+        first = True
+        # params = {'text.usetex': True,
+        #           'font.size': 11
+        #           }
+        # plt.rcParams.update(params)
     if width and height:
         plt.figure(2, figsize=(width / DPI, height / DPI), dpi=DPI)
     else:
@@ -43,6 +51,7 @@ def plot_progress(values, exploration_rate=False, average_period=100, time_left=
     plt.plot(values, label="Reward in episode x")
     plt.plot(get_average(values, average_period), label="Average reward per " + str(average_period) + " episodes")
     plt.legend(loc='lower right')
+    # plt.legend(bbox_to_anchor=(1, 0.5), loc='center left')
     if epsilon:
         sec_color = 'tab:cyan'
         ax2 = plt.twinx()
@@ -60,10 +69,14 @@ def plot_progress(values, exploration_rate=False, average_period=100, time_left=
     if reward_val:
         text += "\nReward: " + reward_val.name
     plt.text(0.02, 0.025, text, fontsize=10, transform=plt.gcf().transFigure)
-    # plt.tight_layout()
+    if first:
+        plt.tight_layout()
     # plt.autoscale()
-    # plt.show()
-    plt.pause(0.00001)
+    if show:
+        plt.show()
+    else:
+        plt.pause(0.00001)
+
 
 # def plot_progress(values, exploration_rate=False, average_period=100, time_left=False, reward_val=False, epsilon=False, epsilon_fac=1):
 #     plt.figure(2)

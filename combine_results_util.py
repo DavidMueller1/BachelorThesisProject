@@ -59,6 +59,42 @@ def compare_massive_results(custom_titles=False):
     plot_mean_with_std_multiple(result_datas, result_titles)
 
 
+def compare_massive_single_results(custom_titles=False):
+    result_list = []
+    result_datas = []
+    result_titles = []
+
+    Logger.input("How many data-files would you like to open?")
+
+    count = simpledialog.askinteger(title="Enter count", prompt="How many experiments would you like to open?")
+
+    Logger.input("Which data-files would you like to open?")
+
+    for n in range(count):
+        file_names = askopenfilenames()
+        experiment_results = []
+        if not file_names:
+            return
+        for file_name in file_names:
+            learned = load_massive_result_data(file_name)
+            experiment_results.append(learned.single_result_data)
+
+        # result_list.append(learned)
+        result_datas.append(experiment_results)
+
+        if custom_titles:
+            custom_title = simpledialog.askstring(title="Enter title", prompt="Enter title for this experiment")
+            if custom_title:
+                result_titles.append(custom_title)
+            else:
+                result_titles.append(file_names[0].split("/")[-2])
+        else:
+            result_titles.append(file_names[0].split("/")[-2])
+        Logger.status("Loaded data-files.")
+
+    plot_mean_with_std_multiple(result_datas, result_titles)
+
+
 def combine_results(title=""):
     Logger.input("Which data-files would you like to open?")
     file_names = askopenfilenames()

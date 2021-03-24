@@ -23,7 +23,9 @@ def train(width: int, length: int, params: Parameters, environment, visualize=Fa
             if exploration_rate_threshold > exploration_rate:
                 action = np.argmax(q_table[state, :])
             else:
-                action = random.choice(environment.get_agent_possible_actions())
+                action = random.choice(
+                    environment.get_agent_possible_actions()
+                )
             new_state, reward = environment.agent_perform_action(action)
             q_table[state, action] = q_table[state, action] * (1 - params.learning_rate) + params.learning_rate * (
                         reward + params.discount_rate * np.max(q_table[new_state, :]))

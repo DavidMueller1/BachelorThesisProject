@@ -8,7 +8,7 @@ from data_util.experiment_data_classes import Parameters
 
 class Buffer:
 
-    def train(self, width: int, length: int, params: Parameters, environment, visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
+    def train(self, width: int, length: int, params: Parameters, environment,visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
         q_table = np.zeros((width * length, 4))
 
         exploration_rate = params.start_exploration_rate
@@ -68,6 +68,13 @@ class Buffer:
             params.rewards_all_episodes.append(rewards_current_episode)
             params.max_rewards_all_episodes.append(max_reward_current_episode)
             if episode % plot_interval == 0:
-                plot_progress(params.rewards_all_episodes, exploration_rate, plot_moving_avg_period, epsilon=eps_history)
+                # plot_progress(params.rewards_all_episodes, exploration_rate, plot_moving_avg_period, epsilon=eps_history)
+                # if episode == 6000:
+                #     plot_progress(params.rewards_all_episodes, exploration_rate, plot_moving_avg_period,
+                #                   epsilon=eps_history, show=True)
+                    # plot_progress(params.rewards_all_episodes, average_period=plot_moving_avg_period,
+                    #               epsilon=eps_history, width=600, height=300, show=True)
+                plot_progress(params.rewards_all_episodes, average_period=plot_moving_avg_period, epsilon=eps_history)
+                # plot_progress(params.rewards_all_episodes, average_period=plot_moving_avg_period, epsilon=eps_history, width=600, height=300)
 
         return q_table, params

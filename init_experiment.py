@@ -5,6 +5,7 @@ from data_util.experiment_data_classes import Parameters
 from data_util.experiment_data_classes import LearnedForSpecificTerrain
 from data_util.experiment_data_classes import Learned
 from data_util.data_loader import load_terrain
+from tkinter import *
 from data_util.data_saver import save_terrain
 from data_util.data_saver import save_learned_for_terrain
 from visualize_util import visualize_best_path
@@ -24,6 +25,7 @@ TARGET_PATH = "data/learned/new_experiments_q_table/"
 
 iterations = 20
 start = 1
+save = False
 folder_name = "2021_03_15_q_table_default"
 experiment_name = "q_table_default"
 
@@ -102,9 +104,10 @@ while n <= iterations:
     Logger.status("Beginning experiment %d/%d" % (n, iterations))
     try:
         params = Parameters(
-            num_episodes=6000,
+            num_episodes=4000,
             # num_episodes=100,
-            max_steps_per_episode=500,
+            # max_steps_per_episode=500,
+            max_steps_per_episode=200,
 
             learning_rate=0.5,
             discount_rate=0.99,
@@ -113,6 +116,7 @@ while n <= iterations:
             max_exploration_rate=1,
             min_exploration_rate=0.01,
             # exploration_decay_rate=0.0001,
+            # exploration_decay_rate=0.0005,
             exploration_decay_rate=0.0005,
 
             rewards_all_episodes=[],
@@ -123,7 +127,8 @@ while n <= iterations:
                                        visualize=visualize_training, plot=plot_training_progress,
                                        plot_interval=plot_interval,
                                        plot_moving_avg_period=plot_moving_average_period)
-        save_single_data(params, params.rewards_all_episodes, q_table, n)
+        if save:
+            save_single_data(params, params.rewards_all_episodes, q_table, n)
         Logger.status("Training done.")
         n += 1
     except Exception as e:

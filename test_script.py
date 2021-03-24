@@ -5,15 +5,22 @@ import dill
 import numpy as np
 import random
 import math
+import json
 from matplotlib import pyplot as plt
 from plot_util import plot_mean_with_std
+from data_util.data_loader import load_massive_result_data
+from tkinter.filedialog import askopenfilename
 from visualize_util import visualize_best_path_deep_q
 from terrain_generator.terrain_util import get_environment
 
 # Logger.debug([-1, 1][random.randint(0, 1)])
-a = random.uniform(0, 1)
-Logger.debug(a)
-Logger.debug(math.sqrt(1 - a ** 2))
+# a = random.uniform(0, 1)
+# Logger.debug(a)
+# Logger.debug(math.sqrt(1 - a ** 2))
+
+file_name = askopenfilename()
+data = load_massive_result_data(file_name)
+Logger.debug(data.params)
 
 # terrain_file = "test_2"
 # environment = get_environment(terrain_file=terrain_file)
