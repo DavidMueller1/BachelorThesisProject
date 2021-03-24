@@ -27,6 +27,10 @@ class AnalyseApp:
         self.random_spawn_checkbox = Checkbutton(master, text="Random spawn", variable=self.random_spawn)
         self.random_spawn_checkbox.pack()
 
+        self.repeat = IntVar()
+        self.repeat_checkbox = Checkbutton(master, text="Repeat", variable=self.repeat)
+        self.repeat_checkbox.pack()
+
 
         self.separator_2 = Frame(master, height=1, width=250, bg="black")
         self.separator_2.pack(pady=10)
@@ -86,7 +90,7 @@ class AnalyseApp:
         self.combine_button.pack()
 
     def show_result(self):
-        show_experiment_result(random_spawn=(self.random_spawn.get() == 1))
+        show_experiment_result(random_spawn=(self.random_spawn.get() == 1), repeat=(self.repeat.get() == 1))
 
     def compare(self):
         compare_results(custom_titles=(self.custom_titles.get() == 1))

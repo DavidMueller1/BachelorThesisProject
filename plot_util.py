@@ -1,3 +1,4 @@
+import matplotlib
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 # from rl_algorithms.deep_q import DQN
@@ -6,7 +7,13 @@ import time
 from matplotlib import cm
 from logger import Logger
 
-DPI = 96
+WIDTH = 422
+HEIGHT = 250
+
+DPI = 85
+
+FULL_SIZE = 10
+HALF_SIZE = 15
 
 
 def plot_network(network):
@@ -32,7 +39,7 @@ def plot_network_layer(figure_num, title, layer_values, current_episode):
 
 
 def plot_progress(values, exploration_rate=False, average_period=100, time_left=False, reward_val=False, epsilon=False,
-                  epsilon_fac=1, width=False, height=False, show=False):
+                  epsilon_fac=1, width=False, height=False, show=False, title="Training...", latex_size=False):
     first = False
     if not plt.fignum_exists(2):
         first = True
@@ -44,19 +51,39 @@ def plot_progress(values, exploration_rate=False, average_period=100, time_left=
         plt.figure(2, figsize=(width / DPI, height / DPI), dpi=DPI)
     else:
         plt.figure(2)
+
+    if latex_size == 'FULL':
+        matplotlib.rc('font', size=FULL_SIZE)
+        matplotlib.rc('axes', titlesize=FULL_SIZE)
+        matplotlib.rc('axes', labelsize=FULL_SIZE)
+        matplotlib.rc('xtick', labelsize=FULL_SIZE)
+        matplotlib.rc('ytick', labelsize=FULL_SIZE)
+        matplotlib.rc('legend', fontsize=FULL_SIZE)
+        matplotlib.rc('figure', titlesize=FULL_SIZE)
+    elif latex_size == 'HALF':
+        matplotlib.rc('font', size=HALF_SIZE)
+        matplotlib.rc('axes', titlesize=HALF_SIZE)
+        matplotlib.rc('axes', labelsize=HALF_SIZE)
+        matplotlib.rc('xtick', labelsize=HALF_SIZE)
+        matplotlib.rc('ytick', labelsize=HALF_SIZE)
+        matplotlib.rc('legend', fontsize=HALF_SIZE)
+        matplotlib.rc('figure', titlesize=HALF_SIZE)
     plt.clf()
-    plt.title("Training...")
+    plt.title(title)
     plt.xlabel("Episode")
-    plt.ylabel("Reward")
-    plt.plot(values, label="Reward in episode x")
-    plt.plot(get_average(values, average_period), label="Average reward per " + str(average_period) + " episodes")
-    plt.legend(loc='lower right')
+    plt.ylabel("Belohnung")
+    plt.plot(values, label="Belohnung in episode x")
+    plt.plot(get_average(values, average_period), label="Ø Belohnung pro " + str(average_period) + " Episoden")
+    if latex_size is not False:
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2))
+    else:
+        plt.legend(loc='lower right')
     # plt.legend(bbox_to_anchor=(1, 0.5), loc='center left')
     if epsilon:
         sec_color = 'tab:cyan'
         ax2 = plt.twinx()
         ax2.set_ylabel("Epsilon", color=sec_color)
-        ax2.plot(np.asarray(epsilon), label="Epsilon in episode x", color=sec_color)
+        ax2.plot(np.asarray(epsilon), label="Epsilon in Episode x", color=sec_color)
         ax2.tick_params(axis='y', labelcolor=sec_color)
     plt.subplots_adjust(bottom=0.2)
     # plt.gcf().text(0.02, -0.1, "Exploration rate: " + str(exploration_rate), fontsize=12)
@@ -113,9 +140,9 @@ def plot_mean_with_std(result_data, title="Mean with Std", period=100):
 
     # plt.figure(2)
     # plt.clf()
-    plt.title(title)
+    # plt.title(title)
     plt.xlabel("Episode")
-    plt.ylabel("Reward")
+    plt.ylabel("Belohnung")
     plt.plot(mean, label="Average Reward in episode x")
     x = np.arange(0, mean.size, 1)
     print(x)
@@ -124,11 +151,15 @@ def plot_mean_with_std(result_data, title="Mean with Std", period=100):
 
 
 def plot_mean_with_std_multiple(result_datas, titles, title="Mean with Std", period=100):
-    # plt.figure(2)
+    plt.figure(7, figsize=(WIDTH / DPI, HEIGHT / DPI))
+    # fig = plt.figure(7)
+    # dpi = fig.get_dpi()
+    # fig.set_size_inches(422.5 / float(DPI), 300.0 / float(dpi))
+    # fig.set_size_inches(WIDTH, HEIGHT)
     # plt.clf()
-    plt.title(title)
+    # plt.title(title)
     plt.xlabel("Episode")
-    plt.ylabel("Reward")
+    plt.ylabel("Belohnung")
     for index, result_data in enumerate(result_datas):
         mean, std = get_moving_average_mean_and_std(result_data, period)
         std_upper = mean + std / 2
@@ -137,6 +168,7 @@ def plot_mean_with_std_multiple(result_datas, titles, title="Mean with Std", per
         x = np.arange(0, mean.size, 1)
         plt.fill_between(x, std_upper, std_lower, alpha=0.3)
     plt.legend(loc='lower right')
+    plt.tight_layout()
     plt.show()
 
 

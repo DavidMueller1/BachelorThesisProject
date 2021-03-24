@@ -53,14 +53,17 @@ def visualize_best_path(world, params: Parameters, q_table):
     last_state = state
     reward_sum = 0
     done = False
+    path = []
     for step in range(params.max_steps_per_episode):
         action = np.argmax(q_table[state, :])
-        new_state, reward = world.agent_perform_action(action)
+        new_state, reward, _ = world.agent_perform_action(action)
         if new_state == last_state:
             done = True
         last_state = state
+        path.append(state)
         state = new_state
         reward_sum += reward
+        world.plot_path(path)
         world.redraw_agent()
         if done:
             break

@@ -71,6 +71,9 @@ def compare_massive_single_results(custom_titles=False):
     Logger.input("Which data-files would you like to open?")
 
     for n in range(count):
+        q_table_zeros = 0
+        q_table_zeros_count = 0
+
         file_names = askopenfilenames()
         experiment_results = []
         if not file_names:
@@ -78,9 +81,15 @@ def compare_massive_single_results(custom_titles=False):
         for file_name in file_names:
             learned = load_massive_result_data(file_name)
             experiment_results.append(learned.single_result_data)
+            if hasattr(learned, 'q_table'):
+                q_table_zeros += learned.q_table.size - np.count_nonzero(learned.q_table)
+                q_table_zeros_count += 1
 
         # result_list.append(learned)
         result_datas.append(experiment_results)
+
+        if q_table_zeros_count > 0:
+            Logger.info("Average Zeros in q_table: ", q_table_zeros / q_table_zeros_count)
 
         if custom_titles:
             custom_title = simpledialog.askstring(title="Enter title", prompt="Enter title for this experiment")
@@ -91,6 +100,8 @@ def compare_massive_single_results(custom_titles=False):
         else:
             result_titles.append(file_names[0].split("/")[-2])
         Logger.status("Loaded data-files.")
+
+
 
     plot_mean_with_std_multiple(result_datas, result_titles)
 

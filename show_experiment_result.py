@@ -10,11 +10,12 @@ from tkinter.filedialog import askopenfilename
 from data_util.experiment_data_classes import LearnedDeepQ
 from data_util.experiment_data_classes import Learned
 from tkinter import *
+import numpy as np
 import time
 
 terrain_file = "test_2"
 
-def show_experiment_result(random_spawn=False):
+def show_experiment_result(random_spawn=False, repeat=True):
     Logger.input("Which data-file would you like to open?")
     file_name = askopenfilename()
     data = load_massive_single_result_data(file_name)
@@ -26,18 +27,28 @@ def show_experiment_result(random_spawn=False):
     world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, random_spawn=random_spawn)
     world.render()
 
-    # Logger.info("Highest point is", terrain.highest_point)
-
     if hasattr(data, 'q_table'):
         Logger.info("Data is a Q-Learning sample")
-        plot_util.plot_q_table(data.q_table, world)
-        plot_progress(data.params.rewards_all_episodes)
+        Logger.info("Zeros in q_table: ", data.q_table.size - np.count_nonzero(data.q_table), "/", data.q_table.size)
+        # plot_util.plot_q_table(data.q_table, world)
+
+        eps_history = []
+        exploration_rate = data.params.start_exploration_rate
+        for episode in range(data.params.num_episodes):
+            eps_history.append(exploration_rate)
+            exploration_rate = data.params.min_exploration_rate if data.params.min_exploration_rate >= exploration_rate else data.params.min_exploration_rate + (
+                    data.params.max_exploration_rate - data.params.min_exploration_rate) * np.exp(
+                -data.params.exploration_decay_rate * episode)
+
+        plot_progress(data.params.rewards_all_episodes, epsilon=eps_history, title="Trainingsergebnis", latex_size='HALF')
 
         while True:
             Logger.status("Showing best learned path...")
             visualize_best_path(world, data.params, data.q_table)
             Logger.status("Highest point reached. Playing again...")
-            # time.sleep(5)
+            if not repeat:
+                break
+            time.sleep(0.5)
     elif hasattr(data, 'trained_net'):
         Logger.info("Data is a Deep-Q-Learning sample")
         # Logger.debug("Values:", data.parameters.rewards_all_episodes)
@@ -46,7 +57,7 @@ def show_experiment_result(random_spawn=False):
             Logger.status("Showing best learned path...")
             visualize_best_path_deep_q(world, data.params, data.trained_net)
             Logger.status("Highest point reached. Playing again...")
-            # time.sleep(5)
+            time.sleep(0.5)
 
 
 def show_experiment_result_with_terrain(random_spawn=False):

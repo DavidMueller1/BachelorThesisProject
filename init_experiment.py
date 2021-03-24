@@ -11,6 +11,7 @@ from data_util.data_saver import save_learned_for_terrain
 from visualize_util import visualize_best_path
 from rl_algorithms import simple
 from rl_algorithms.buffer import Buffer
+from rl_algorithms.buffer_modified_reward import BufferModifiedReward
 from rl_algorithms import exploration_as_reward
 from logger import Logger
 import numpy as np
@@ -25,9 +26,9 @@ TARGET_PATH = "data/learned/new_experiments_q_table/"
 
 iterations = 20
 start = 1
-save = False
-folder_name = "2021_03_15_q_table_default"
-experiment_name = "q_table_default"
+save = True
+folder_name = "2021_03_24_q_table_epsilon_0"
+experiment_name = "q_table_epsilon_0"
 
 plot_training_progress = True  # If True, the training will take longer
 plot_interval = 25  # Only refresh plot every n episodes. Will speed up training
@@ -104,25 +105,30 @@ while n <= iterations:
     Logger.status("Beginning experiment %d/%d" % (n, iterations))
     try:
         params = Parameters(
-            num_episodes=4000,
+            num_episodes=10000,
             # num_episodes=100,
             # max_steps_per_episode=500,
-            max_steps_per_episode=200,
+            max_steps_per_episode=300,
 
-            learning_rate=0.5,
+            # learning_rate=0.5,
+            learning_rate=0.6,
             discount_rate=0.99,
 
-            start_exploration_rate=1,
-            max_exploration_rate=1,
-            min_exploration_rate=0.01,
+            # start_exploration_rate=1,
+            start_exploration_rate=0,
+            # max_exploration_rate=1,
+            max_exploration_rate=0,
+            # min_exploration_rate=0.01,
+            min_exploration_rate=0,
             # exploration_decay_rate=0.0001,
-            # exploration_decay_rate=0.0005,
-            exploration_decay_rate=0.0005,
+            exploration_decay_rate=0,
+            # exploration_decay_rate=0.00015,
 
             rewards_all_episodes=[],
             max_rewards_all_episodes=[],
         )
-        agent = Buffer()
+        # agent = Buffer()
+        agent = BufferModifiedReward()
         q_table, params = agent.train(width=terrain.width, length=terrain.length, params=params, environment=world,
                                        visualize=visualize_training, plot=plot_training_progress,
                                        plot_interval=plot_interval,

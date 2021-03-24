@@ -5,10 +5,11 @@ from plot_util import plot_progress
 from logger import Logger
 from data_util.experiment_data_classes import Parameters
 
+EPSILON_FACTOR = -20
 
-class Buffer:
+class BufferModifiedReward:
 
-    def train(self, width: int, length: int, params: Parameters, environment,visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
+    def train(self, width: int, length: int, params: Parameters, environment, visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
         q_table = np.zeros((width * length, 4))
 
         exploration_rate = params.start_exploration_rate
@@ -23,20 +24,18 @@ class Buffer:
             max_reward_current_episode = 0
 
             for step in range(params.max_steps_per_episode):
-                exploration_rate_threshold = random.uniform(0, 1)
-                if exploration_rate_threshold > exploration_rate:
-                    action = np.argmax(q_table[state, :])
-                else:
-                    action = random.choice(environment.get_agent_possible_actions())
-                new_state, reward, _ = environment.agent_perform_action(action)
+                action = np.argmax(q_table[state, :])
+                new_state, actual_reward, _ = environment.agent_perform_action(action)
+
+                reward = actual_reward - (exploration_rate * EPSILON_FACTOR)
                 sars = (state, action, reward, new_state)
 
                 buffer.append(sars)
 
                 state = new_state
-                rewards_current_episode += reward
-                if max_reward_current_episode < reward:
-                    max_reward_current_episode = reward
+                rewards_current_episode += actual_reward
+                if max_reward_current_episode < actual_reward:
+                    max_reward_current_episode = actual_reward
 
                 if visualize:
                     # environment.clear()
