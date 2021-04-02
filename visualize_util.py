@@ -53,34 +53,32 @@ def visualize_best_path(world, params: Parameters, q_table):
     last_state = state
     reward_sum = 0
     done = False
-    path = []
+    path = [state]
     for step in range(params.max_steps_per_episode):
         action = np.argmax(q_table[state, :])
         new_state, reward, _ = world.agent_perform_action(action)
         if new_state == last_state:
             done = True
+            break
         last_state = state
-        path.append(state)
         state = new_state
+        path.append(state)
         reward_sum += reward
         world.plot_path(path)
-        world.redraw_agent()
         if done:
             break
+        world.redraw_agent()
         time.sleep(0.1)
 
 
 def visualize_best_path_deep_q(world, params: DeepQParameters, target_net):
-    # device = T.device("cuda" if T.cuda.is_available() else "cpu")
-
-    # root = Tk()
-    # deep_q_infos = DeepQInfos(root, world, params, target_net)
-    # root.mainloop()
-
-    world.reset_agent()
-    state = world.get_state_for_deep_q()
+    state = world.reset_agent()
     last_state = state
     reward_sum = 0
+    path = [state]
+
+    repeat_count = 0
+    repeat_max = 6
     for step in range(params.max_steps_per_episode):
         state_coords = np.asarray(world.agent_pos).astype(np.float32)
         adjacent_heights = np.asarray(world.get_agent_adjacent_heights()).astype(np.float32)
@@ -89,17 +87,46 @@ def visualize_best_path_deep_q(world, params: DeepQParameters, target_net):
             # action = target_net(torch.tensor(state_coords).to(device)).argmax(dim=0).to(device)
         observation = world.get_state_for_deep_q(step=step, max_steps=params.max_steps_per_episode)
         # observation = world.get_state_for_deep_q()
-        state = T.tensor([observation]).to(target_net.device)
-        actions = target_net.forward(state)
+        tensor_state = T.tensor([observation]).to(target_net.device)
+        actions = target_net.forward(tensor_state)
         action = T.argmax(actions).item()
             # action = target_net(T.tensor(combined_state).to(device)).argmax(dim=0).to(device)
         new_state, reward, done = world.agent_perform_action(action)
         # if new_state == last_state:
-        #     done = True
+        #     repeat_count += 1
+        #     if repeat_count > repeat_max:
+        #         break
+        # else:
+        #     repeat_count = 0
+        last_state = state
+        state = new_state
+        path.append(state)
+        reward_sum += reward
+        world.plot_path(path)
+        if done:
+            break
+        world.redraw_agent()
+        time.sleep(0.1)
+
+
+def get_reward_from_trained_net_on_environment(world, params: DeepQParameters, target_net):
+    world.reset_agent()
+    state = world.get_state_for_deep_q()
+    last_state = state
+    reward_sum = 0
+    for step in range(params.max_steps_per_episode):
+        state_coords = np.asarray(world.agent_pos).astype(np.float32)
+        adjacent_heights = np.asarray(world.get_agent_adjacent_heights()).astype(np.float32)
+        combined_state = np.asarray(world.agent_pos + world.get_agent_adjacent_heights()).astype(np.float32)
+        observation = world.get_state_for_deep_q(step=step, max_steps=params.max_steps_per_episode)
+        state = T.tensor([observation]).to(target_net.device)
+        actions = target_net.forward(state)
+        action = T.argmax(actions).item()
+        new_state, reward, done = world.agent_perform_action(action)
         last_state = state
         state = new_state
         reward_sum += reward
-        world.redraw_agent()
         if done:
             break
-        time.sleep(0.1)
+
+    return reward_sum

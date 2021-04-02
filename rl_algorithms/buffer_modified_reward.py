@@ -5,12 +5,13 @@ from plot_util import plot_progress
 from logger import Logger
 from data_util.experiment_data_classes import Parameters
 
-EPSILON_FACTOR = -20
+EPSILON_FACTOR = 1
 
 class BufferModifiedReward:
 
     def train(self, width: int, length: int, params: Parameters, environment, visualize=False, plot=False, plot_interval=10, plot_moving_avg_period=100):
-        q_table = np.zeros((width * length, 4))
+        # q_table = np.zeros((width * length, 4))
+        q_table = np.full((width * length, 4), 500)
 
         exploration_rate = params.start_exploration_rate
         eps_history = []
@@ -18,6 +19,8 @@ class BufferModifiedReward:
         for episode in range(params.num_episodes):
             if episode % 1000 == 0:
                 Logger.debug("EPISODE: ", episode)
+                # Logger.debug("Zeros in q_table: ", q_table.size - np.count_nonzero(q_table), "/", q_table.size)
+                Logger.debug("Zeros in q_table: ", np.count_nonzero(q_table == 500), "/", q_table.size)
             state = environment.reset_agent()
             done = False
             rewards_current_episode = 0
@@ -27,7 +30,11 @@ class BufferModifiedReward:
                 action = np.argmax(q_table[state, :])
                 new_state, actual_reward, _ = environment.agent_perform_action(action)
 
-                reward = actual_reward - (exploration_rate * EPSILON_FACTOR)
+                # reward = ((1 - exploration_rate) * actual_reward) - (exploration_rate * EPSILON_FACTOR)
+                # reward = -(1 / (actual_reward + 500)) if exploration_rate > 0.2 else actual_reward
+                # reward = ((1 - exploration_rate) * actual_reward) - exploration_rate * np.random.random() * actual_reward
+                reward = exploration_rate * random.uniform(0.0, 5.0) + (1 - exploration_rate) * actual_reward
+                # reward = actual_reward
                 sars = (state, action, reward, new_state)
 
                 buffer.append(sars)
@@ -58,9 +65,10 @@ class BufferModifiedReward:
             #     -params.exploration_decay_rate * episode)
 
             eps_history.append(exploration_rate)
-            exploration_rate = params.min_exploration_rate if params.min_exploration_rate >= exploration_rate else params.min_exploration_rate + (
-                    params.max_exploration_rate - params.min_exploration_rate) * np.exp(
-                -params.exploration_decay_rate * episode)
+            # exploration_rate = params.min_exploration_rate if params.min_exploration_rate >= exploration_rate else params.min_exploration_rate + (
+            #         params.max_exploration_rate - params.min_exploration_rate) * np.exp(
+            #     -params.exploration_decay_rate * episode)
+            exploration_rate = max(0, params.min_exploration_rate + (params.max_exploration_rate - params.min_exploration_rate) * (1 - params.exploration_decay_rate * episode))
 
             # print("Exploration Rate: " + exploration_rate.__str__())
             # print(max_reward_current_episode)

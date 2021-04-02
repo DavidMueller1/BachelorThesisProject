@@ -178,7 +178,7 @@ class Agent():
 def train(width: int, length: int, params, environment, visualize=False, show_path_interval=20, plot=True, plot_interval=10, plot_moving_avg_period=100):
 
     # agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
-    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
+    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 4, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
     # time_estimater = TimeEstimater(params.num_episodes)
     agent.epsilon = 0
 
@@ -211,7 +211,7 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
 
             # modified_reward = eps * 5 + (1 - eps) * reward
             # TODO modified_reward = eps * 0 + (1 - eps) * reward
-            modified_reward = eps * random.uniform(0.0, 5.0) + (1 - eps) * reward
+            modified_reward = (1 - eps) * reward - eps * random.uniform(0.0, 5.0)
 
             # state, reward, done = environment.agent_perform_action(action, step == params.max_steps_per_episode - 1)
             path.append(state)

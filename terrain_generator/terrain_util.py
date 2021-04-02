@@ -3,17 +3,18 @@ from init_terrain import generate_random_terrain
 from visualization_engine_3d.engine import Engine3D
 from data_util.data_saver import save_terrain
 from data_util.data_loader import load_terrain
-from visualization_engine_3d.engine import Rewards
+from visualization_engine_3d.engine import Rewards, States
 
 
-def get_environment(terrain_file, scale=14, distance=100, random_spawn=True, render_world=True):
+def get_environment(terrain_file, scale=14, distance=100, random_spawn=True, render_world=True, reward_val=Rewards.Spiral, state_val=States.Default):
 
     # TERRAIN
     if terrain_file == "":
         Logger.status("Generating new terrain...")
         terrain = generate_random_terrain()
 
-        world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, random_spawn=random_spawn, reward_val=Rewards.Spiral)
+        # world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, random_spawn=random_spawn, reward_val=Rewards.Spiral)
+        world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, random_spawn=random_spawn, reward_val=reward_val, state_val=state_val)
         if render_world:
             world.render()
 
@@ -28,7 +29,7 @@ def get_environment(terrain_file, scale=14, distance=100, random_spawn=True, ren
         Logger.status("Loading terrain from file \"" + terrain_file + "\"...")
         terrain = load_terrain(terrain_file)
         world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800,
-                         random_spawn=random_spawn, reward_val=Rewards.Spiral)
+                         random_spawn=random_spawn, reward_val=reward_val, state_val=state_val)
         if render_world:
             world.render()
 

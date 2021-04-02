@@ -1,5 +1,5 @@
 from tkinter import *
-from combine_results_util import compare_results, combine_results, compare_massive_results, compare_massive_single_results
+from combine_results_util import compare_results, combine_results, compare_massive_results, compare_massive_single_results, boxplot_massive_single_results
 from show_experiment_result import show_experiment_result, show_params
 from logger import Logger
 
@@ -86,7 +86,7 @@ class AnalyseApp:
         self.separator_7 = Frame(master, height=1, width=250, bg="black")
         self.separator_7.pack(pady=10)
 
-        self.combine_button = Button(master, text="Show Params", command=self.show_params)
+        self.combine_button = Button(master, text="Show Box Plots", command=self.show_box_plots)
         self.combine_button.pack()
 
     def show_result(self):
@@ -106,6 +106,9 @@ class AnalyseApp:
 
     def show_params(self):
         show_params()
+
+    def show_box_plots(self):
+        boxplot_massive_single_results(self.random_spawn.get())
 
 
 root = Tk()

@@ -18,6 +18,16 @@ class Rewards(Enum):
     SpiralEpsilon = 5
 
 
+class States(Enum):
+    Default = 0
+    Minimal = 1
+    AdjacentHeights = 2
+    RelativePosAndHeights = 3
+    RelativePosAndHeightsAndHighestPoint = 4
+    RelativePosAndHeightsAndHighestPointAndSteps = 5
+    RelativePosAndHeightsAndHighestPointAndStepsAndVisited = 6
+
+
 # For Spiral:
 HEIGHT_MULTIPLIKATOR = 40
 VISITED_MULTIPLIKATOR = 10
@@ -28,7 +38,7 @@ class Engine3D:
 
     def __reset_drag(self, event):
         self.__prev = []
-    
+
     def __drag(self, event):
         if self.__prev:
             self.rotate('y', (event.x - self.__prev[0]) / 20)
@@ -157,21 +167,21 @@ class Engine3D:
         self.screen.zeros[1] += 5
         self.clear()
         self.render()
-        
+
     def write_points(self, points):
         self.points = []
         for point in points:
             self.points.append(visualization_engine_3d.vertex.Vertex(point))
-            
+
     def write_triangles(self, triangles):
         self.triangles = []
         for triangle in triangles:
             if len(triangle) != 4:
                 triangle.append('gray')
             self.triangles.append(visualization_engine_3d.face.Face(triangle))
-            
+
     def __init__(self, terrain: Terrain, agent_pos=(0, 0), width=1000, height=700, distance=6, scale=100, title='3D',
-                 background='white', manual_control=False, random_spawn=False, reward_val=Rewards.Default):
+                 background='white', manual_control=False, random_spawn=False, reward_val=Rewards.Default, state_val=States.Default):
         # object parameters
         self.distance = distance
         self.scale = scale
@@ -207,7 +217,7 @@ class Engine3D:
         # self.screen.window.bind('z', self.__selectz)
         # self.screen.window.bind('<Left>', self.__movedown)
         # self.screen.window.bind('<Right>', self.__moveup)
-        
+
         # store coordinates
         self.original_points = terrain.points
         self.write_points(terrain.points)
@@ -243,6 +253,17 @@ class Engine3D:
             Rewards.SpiralEpsilon: self.get_reward_for_spiral_with_epsilon
         }
         self.reward_val = reward_val
+
+        self.state_fun = {
+            States.Default: self.get_state_default,
+            States.Minimal: self.get_state_minimal,
+            States.AdjacentHeights: self.get_state_with_heights,
+            States.RelativePosAndHeights: self.get_state_relative_pos_and_heights,
+            States.RelativePosAndHeightsAndHighestPoint: self.get_state_relative_pos_and_heights_and_highest_point,
+            States.RelativePosAndHeightsAndHighestPointAndSteps: self.get_state_relative_pos_and_heights_and_highest_point_and_steps,
+            States.RelativePosAndHeightsAndHighestPointAndStepsAndVisited: self.get_state_relative_pos_and_heights_and_highest_point_and_steps_and_visited
+        }
+        self.state_val = state_val
 
         if manual_control:
             self.screen.window.bind('<Up>', self.__agent_move_up)
@@ -391,6 +412,8 @@ class Engine3D:
     def get_reward_for_spiral_with_epsilon(self, last_state, new_point):
         return
 
+    ################################################ STATES FOR DEEP Q ############################################
+
     def get_state_for_deep_q(self, step=False, max_steps=False,):
         heights = self.get_agent_adjacent_heights()
         relative_pos = self.get_agent_relative_pos()
@@ -407,7 +430,49 @@ class Engine3D:
         # return np.asarray(relative_pos + heights + self.highest_point_vistited_pos + adjacent_visited + steps_left, dtype=np.float32)
         # return np.asarray(relative_pos + heights + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32)
         # return np.asarray(relative_pos + heights + adjacent_visited + steps_left + (max_steps if max_steps else 0, ) + self.highest_point_vistited_pos, dtype=np.float32)
-        return np.asarray(relative_pos + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32) # WORKING 1
+
+        return self.state_fun[self.state_val](step, max_steps)
+
+    def get_state_default(self, step, max_steps):  # WORKING 1
+        relative_pos = self.get_agent_relative_pos()
+        adjacent_visited = self.get_agent_adjacent_visited()
+        steps_left = (0,)
+        if step and max_steps:
+            steps_left = (int(max_steps - step),)
+
+        return np.asarray(relative_pos + adjacent_visited + steps_left + (max_steps if max_steps else 0,),
+                          dtype=np.float32)
+
+    def get_state_minimal(self, step, max_steps):
+        return np.asarray(self.agent_pos, dtype=np.float32)
+
+    def get_state_with_heights(self, step, max_steps):
+        heights = self.get_agent_adjacent_heights()
+        return np.asarray(self.agent_pos + heights, dtype=np.float32)
+
+    def get_state_relative_pos_and_heights(self, step, max_steps):
+        heights = self.get_agent_adjacent_heights()
+        relative_pos = self.get_agent_relative_pos()
+        return np.asarray(relative_pos + heights, dtype=np.float32)
+
+    def get_state_relative_pos_and_heights_and_highest_point(self, step, max_steps):
+        heights = self.get_agent_adjacent_heights()
+        relative_pos = self.get_agent_relative_pos()
+        return np.append(np.asarray(relative_pos + heights + self.highest_point_vistited_pos, dtype=np.float32), np.array(self.highest_point_vistited_height * HEIGHT_MULTIPLIKATOR, dtype=np.float32))
+
+    def get_state_relative_pos_and_heights_and_highest_point_and_steps(self, step, max_steps):
+        heights = self.get_agent_adjacent_heights()
+        relative_pos = self.get_agent_relative_pos()
+        steps_left = (int(max_steps - step), )
+        return np.append(np.asarray(relative_pos + heights + self.highest_point_vistited_pos + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32), np.array(self.highest_point_vistited_height * HEIGHT_MULTIPLIKATOR, dtype=np.float32))
+
+    def get_state_relative_pos_and_heights_and_highest_point_and_steps_and_visited(self, step, max_steps):
+        heights = self.get_agent_adjacent_heights()
+        relative_pos = self.get_agent_relative_pos()
+        adjacent_visited = self.get_agent_adjacent_visited()
+        steps_left = (int(max_steps - step), )
+        return np.append(np.asarray(relative_pos + heights + self.highest_point_vistited_pos + adjacent_visited + steps_left + (max_steps if max_steps else 0, ), dtype=np.float32), np.array(self.highest_point_vistited_height * HEIGHT_MULTIPLIKATOR, dtype=np.float32))
+
 
     def get_agent_height(self):
         return self.original_points[self.get_agent_state()][2]
@@ -443,7 +508,7 @@ class Engine3D:
         for point in path_points[1:]:
             # point.z + 1
             point = point.flatten(self.scale, self.distance)
-            self.path_shapes.append(self.screen.create_line([last_point, point], color='purple'))
+            self.path_shapes.append(self.screen.create_line([last_point, point], color='white'))
             last_point = point
 
     def clear_path(self):

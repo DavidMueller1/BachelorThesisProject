@@ -3,6 +3,7 @@ from logger import Logger
 import os
 import dill
 import numpy as np
+import pandas as pd
 import random
 import math
 import json
@@ -13,14 +14,35 @@ from tkinter.filedialog import askopenfilename
 from visualize_util import visualize_best_path_deep_q
 from terrain_generator.terrain_util import get_environment
 
+# spread = np.random.rand(50) * 100
+# Logger.debug(spread)
+# center = np.ones(25) * 40
+# Logger.debug(center)
+# flier_high = np.random.rand(10) * 100 + 100
+# Logger.debug(flier_high)
+# flier_low = np.random.rand(10) * -100
+# Logger.debug(flier_low)
+# d2 = np.concatenate((spread, center, flier_high, flier_low))
+# Logger.debug(d2)
+
+test_data = np.rint(np.random.rand(7) * 10)
+Logger.debug(test_data)
+
+plt.figure(3)
+plt.xlabel("Episode")
+plt.ylabel("Belohnung")
+plt.boxplot(test_data)
+plt.tight_layout()
+plt.show()
+
 # Logger.debug([-1, 1][random.randint(0, 1)])
 # a = random.uniform(0, 1)
 # Logger.debug(a)
 # Logger.debug(math.sqrt(1 - a ** 2))
 
-file_name = askopenfilename()
-data = load_massive_result_data(file_name)
-Logger.debug(data.params)
+# file_name = askopenfilename()
+# data = load_massive_result_data(file_name)
+# Logger.debug(data.params)
 
 # terrain_file = "test_2"
 # environment = get_environment(terrain_file=terrain_file)

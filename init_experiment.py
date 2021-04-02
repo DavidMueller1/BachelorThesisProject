@@ -27,11 +27,11 @@ TARGET_PATH = "data/learned/new_experiments_q_table/"
 iterations = 20
 start = 1
 save = True
-folder_name = "2021_03_24_q_table_epsilon_0"
-experiment_name = "q_table_epsilon_0"
+folder_name = "2021_03_25_q_table_epsilon_in_reward_2"
+experiment_name = "q_table_epsilon_in_reward_2"
 
 plot_training_progress = True  # If True, the training will take longer
-plot_interval = 25  # Only refresh plot every n episodes. Will speed up training
+plot_interval = 500  # Only refresh plot every n episodes. Will speed up training
 plot_moving_average_period = 100  # The period in which the average is computed
 
 visualize_training = False  # If True, the training will obviously take much much longer
@@ -105,24 +105,27 @@ while n <= iterations:
     Logger.status("Beginning experiment %d/%d" % (n, iterations))
     try:
         params = Parameters(
-            num_episodes=10000,
+            num_episodes=50000,
             # num_episodes=100,
             # max_steps_per_episode=500,
-            max_steps_per_episode=300,
+            # max_steps_per_episode=300,
+            max_steps_per_episode=80,
 
             # learning_rate=0.5,
-            learning_rate=0.6,
+            learning_rate=1,
             discount_rate=0.99,
 
-            # start_exploration_rate=1,
-            start_exploration_rate=0,
-            # max_exploration_rate=1,
-            max_exploration_rate=0,
-            # min_exploration_rate=0.01,
-            min_exploration_rate=0,
+            start_exploration_rate=1,
+            # start_exploration_rate=0,
+            max_exploration_rate=1,
+            # max_exploration_rate=0,
+            min_exploration_rate=0.001,
+            # min_exploration_rate=0,
             # exploration_decay_rate=0.0001,
-            exploration_decay_rate=0,
+            # exploration_decay_rate=0,
             # exploration_decay_rate=0.00015,
+            # exploration_decay_rate=0.0005,
+            exploration_decay_rate=0.0001,
 
             rewards_all_episodes=[],
             max_rewards_all_episodes=[],

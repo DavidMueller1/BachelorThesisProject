@@ -3,9 +3,11 @@ import pickle
 import traceback
 from pathlib import Path
 import dill
+import random
 import gym
 # from luna_test.deep_q_test import Agent
 from luna_test.deep_q_test_two_networks import Agent
+from luna_test.deep_q_test_two_networks_modified_reward import AgentModifiedReward
 from plot_util import plot_progress
 from plot_util import get_current_average
 import numpy as np
@@ -15,13 +17,14 @@ TARGET_PATH = "../data/learned/new_experiments_path_luna_lander/"
 
 
 class ExperimentSaveRepeatLuna:
-    def __init__(self, number_of_experiments, dir_name, file_name, params, visualize=False, start_number=1):
+    def __init__(self, number_of_experiments, dir_name, file_name, params, visualize=False, start_number=1, epsilon_in_reward=False):
         self.number_of_experiments = number_of_experiments
         self.dir_name = dir_name
         self.file_name = file_name
         self.params = params
         self.visualize = visualize
         self.start_number = start_number
+        self.epsilon_in_reward = epsilon_in_reward
         self.env = gym.make('LunarLander-v2')
 
         self.result_data = []
@@ -44,9 +47,16 @@ class ExperimentSaveRepeatLuna:
         Logger.status("\nALL EXPERIMENTS DONE\n\n")
 
     def execute_experiment(self):
-        agent = Agent(gamma=self.params.discount_rate, epsilon=self.params.start_exploration_rate, batch_size=self.params.batch_size,
-                      target_update=self.params.target_update, n_actions=4, eps_end=self.params.min_exploration_rate,
-                      input_dims=[8], learning_rate=self.params.learning_rate, eps_dec=self.params.exploration_decay_rate)
+        if self.epsilon_in_reward:
+            agent = AgentModifiedReward(gamma=self.params.discount_rate, epsilon=self.params.start_exploration_rate, batch_size=self.params.batch_size,
+                          target_update=self.params.target_update, n_actions=4, eps_end=self.params.min_exploration_rate,
+                          input_dims=[8], learning_rate=self.params.learning_rate, eps_dec=self.params.exploration_decay_rate)
+        else:
+            agent = Agent(gamma=self.params.discount_rate, epsilon=self.params.start_exploration_rate,
+                          batch_size=self.params.batch_size,
+                          target_update=self.params.target_update, n_actions=4, eps_end=self.params.min_exploration_rate,
+                          input_dims=[8], learning_rate=self.params.learning_rate,
+                          eps_dec=self.params.exploration_decay_rate)
         # agent = Agent(gamma=0.99, epsilon=1.0, batch_size=64, target_update=10, n_actions=4, eps_end=0.01, input_dims=[24], learning_rate=0.001, eps_dec=0.0001)
         # agent = Agent(gamma=0.99, epsilon=1.0, batch_size=64, n_actions=4, eps_end=0.02, input_dims=[8], learning_rate=0.001, eps_dec=0.0001)
         scores, eps_history = [], []
@@ -61,12 +71,17 @@ class ExperimentSaveRepeatLuna:
             observation = self.env.reset()
             # Logger.debug("Observation:", observation)
             agent.calculate_epsilon(episode)
+            step = 0
             while not done:
+                step += 1
                 if self.visualize:
                     self.env.render()
                 action = agent.choose_action(observation)
-                observation_, reward, done, info = self.env.step(action)
-                score += reward
+                observation_, actual_reward, done, info = self.env.step(action)
+
+                reward = agent.epsilon * random.uniform(0.0, 5.0) + (1 - agent.epsilon) * actual_reward
+
+                score += actual_reward
                 agent.store_transition(observation, action, reward, observation_, done)
                 agent.learn(episode)
                 observation = observation_

@@ -174,10 +174,10 @@ class Agent():
         # Logger.debug("========================================")
 
 
-def train(width: int, length: int, params, environment, visualize=False, show_path_interval=20, plot=True, plot_interval=10, plot_moving_avg_period=100):
+def train(width: int, length: int, params, environment, visualize=False,show_path_interval=20, plot=True, plot_interval=10, plot_moving_avg_period=100):
 
     # agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
-    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 5, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
+    agent = Agent(params.discount_rate, params.start_exploration_rate, params.learning_rate, [8], 4, params.batch_size, params.target_update, params.replay_buffer_size, params.min_exploration_rate, params.exploration_decay_rate)
     # time_estimater = TimeEstimater(params.num_episodes)
 
     scores, eps_history = [], []
@@ -197,7 +197,9 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
             # Logger.debug("STEP:", step)
             # Logger.debug("----")
             action = agent.choose_action(observation)
-            state, reward, done = environment.agent_perform_action(action, is_last_action=(step + 1 == params.max_steps_per_episode))
+            state, reward, done = environment.agent_perform_action(
+                action, is_last_action=(step + 1 == params.max_steps_per_episode)
+            )
 
             # state, reward, done = environment.agent_perform_action(action, step == params.max_steps_per_episode - 1)
             path.append(state)

@@ -13,13 +13,15 @@ TARGET_PATH = "../data/learned/new_experiments_path/"
 
 
 class ExperimentSaveRepeat:
-    def __init__(self, number_of_experiments, dir_name, file_name, params, environment, start_number=1):
+    def __init__(self, number_of_experiments, dir_name, file_name, params, environment, start_number=1,
+                 modified_reward=False):
         self.number_of_experiments = number_of_experiments
         self.dir_name = dir_name
         self.file_name = file_name
         self.params = params
         self.environment = environment
         self.start_number = start_number
+        self.modified_reward = modified_reward
 
         self.result_data = []
 
@@ -62,16 +64,26 @@ class ExperimentSaveRepeat:
         #     self.save_data()
 
     def execute_experiment(self):
-        # trained_net, params = deep_q_2.train(width=self.environment.grid_width,
-        trained_net, params = deep_q_2_modified_reward.train(width=self.environment.grid_width,
-                                             length=self.environment.grid_height,
-                                             params=self.params,
-                                             environment=self.environment,
-                                             visualize=False,
-                                             show_path_interval=0,
-                                             plot=True,
-                                             plot_interval=20,
-                                             plot_moving_avg_period=100)
+        if self.modified_reward:
+            trained_net, params = deep_q_2_modified_reward.train(width=self.environment.grid_width,
+                                                                 length=self.environment.grid_height,
+                                                                 params=self.params,
+                                                                 environment=self.environment,
+                                                                 visualize=False,
+                                                                 show_path_interval=0,
+                                                                 plot=True,
+                                                                 plot_interval=20,
+                                                                 plot_moving_avg_period=100)
+        else:
+            trained_net, params = deep_q_2.train(width=self.environment.grid_width,
+                                                 length=self.environment.grid_height,
+                                                 params=self.params,
+                                                 environment=self.environment,
+                                                 visualize=False,
+                                                 show_path_interval=0,
+                                                 plot=True,
+                                                 plot_interval=20,
+                                                 plot_moving_avg_period=100)
 
         return trained_net, params
 

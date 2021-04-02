@@ -12,8 +12,10 @@ from data_util.experiment_data_classes import Learned
 from tkinter import *
 import numpy as np
 import time
+from visualization_engine_3d.engine import Rewards, States
 
 terrain_file = "test_2"
+
 
 def show_experiment_result(random_spawn=False, repeat=True):
     Logger.input("Which data-file would you like to open?")
@@ -24,7 +26,8 @@ def show_experiment_result(random_spawn=False, repeat=True):
     Logger.status("Loaded data-file \"" + file_name + "\". Initializing renderer...")
 
     terrain = load_terrain(terrain_file)
-    world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, random_spawn=random_spawn)
+    # world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, random_spawn=random_spawn)
+    world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, random_spawn=random_spawn, reward_val=Rewards.Delta, state_val=States.RelativePosAndHeightsAndHighestPointAndSteps)
     world.render()
 
     if hasattr(data, 'q_table'):
@@ -40,7 +43,7 @@ def show_experiment_result(random_spawn=False, repeat=True):
                     data.params.max_exploration_rate - data.params.min_exploration_rate) * np.exp(
                 -data.params.exploration_decay_rate * episode)
 
-        plot_progress(data.params.rewards_all_episodes, epsilon=eps_history, title="Trainingsergebnis", latex_size='HALF')
+        plot_progress(data.params.rewards_all_episodes, epsilon=eps_history, title=False, latex_size='HALF')
 
         while True:
             Logger.status("Showing best learned path...")
@@ -52,12 +55,21 @@ def show_experiment_result(random_spawn=False, repeat=True):
     elif hasattr(data, 'trained_net'):
         Logger.info("Data is a Deep-Q-Learning sample")
         # Logger.debug("Values:", data.parameters.rewards_all_episodes)
-        plot_progress(data.params.rewards_all_episodes)
+        eps_history = []
+        exploration_rate = data.params.start_exploration_rate
+        for episode in range(data.params.num_episodes):
+            eps_history.append(exploration_rate)
+            exploration_rate = data.params.min_exploration_rate if data.params.min_exploration_rate >= exploration_rate else data.params.min_exploration_rate + (
+                    data.params.max_exploration_rate - data.params.min_exploration_rate) * np.exp(
+                -data.params.exploration_decay_rate * episode)
+        plot_progress(data.params.rewards_all_episodes, epsilon=eps_history, title=False)
         while True:
             Logger.status("Showing best learned path...")
             visualize_best_path_deep_q(world, data.params, data.trained_net)
             Logger.status("Highest point reached. Playing again...")
-            time.sleep(0.5)
+            if not repeat:
+                break
+            time.sleep(1)
 
 
 def show_experiment_result_with_terrain(random_spawn=False):
@@ -98,4 +110,21 @@ def show_params():
     Logger.input("Which data-file would you like to open?")
     file_name = askopenfilename()
     data = load_massive_result_data(file_name)
+    data.params.rewards_all_episodes = []
+    data.params.max_rewards_all_episodes = []
     Logger.info(data.params)
+
+
+def show_experiment_result_luna_lander(repeat=True):
+    Logger.input("Which data-file would you like to open?")
+    file_name = askopenfilename()
+    data = load_massive_single_result_data(file_name)
+    Logger.status("Loaded data-file \"" + file_name + "\". Initializing renderer...")
+    plot_progress(data.params.rewards_all_episodes)
+
+        # Logger.debug("Values:", data.parameters.rewards_all_episodes)
+        # while True:
+        #     Logger.status("Showing best learned path...")
+        #     visualize_best_path_deep_q(world, data.params, data.trained_net)
+        #     Logger.status("Highest point reached. Playing again...")
+        #     time.sleep(0.5)
