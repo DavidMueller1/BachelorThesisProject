@@ -14,7 +14,7 @@ DPI = 85
 
 FULL_SIZE = 10
 HALF_SIZE = 15
-SIZE_MODE = 'HALF'
+SIZE_MODE = 'FULL'
 
 
 def plot_network(network):

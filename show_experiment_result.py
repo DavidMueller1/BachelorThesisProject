@@ -27,7 +27,7 @@ def show_experiment_result(random_spawn=False, repeat=True):
 
     terrain = load_terrain(terrain_file)
     # world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, random_spawn=random_spawn)
-    world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, random_spawn=random_spawn, reward_val=Rewards.Delta, state_val=States.RelativePosAndHeightsAndHighestPointAndSteps)
+    world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800, random_spawn=random_spawn, reward_val=Rewards.Delta, state_val=States.Default)
     world.render()
 
     if hasattr(data, 'q_table'):

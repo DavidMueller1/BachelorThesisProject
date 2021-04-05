@@ -354,22 +354,96 @@ from visualization_engine_3d.engine import Rewards, States
 # experiment_handler.start_experiments()
 
 
-folder_name = "2021_04_02_random_spawn_exploration"
-file_name = "random_spawn_exploration"
-terrain_file = "test_2"
-number_of_experiments = 1
+# folder_name = "2021_04_02_random_spawn_exploration"
+# file_name = "random_spawn_exploration"
+# terrain_file = "test_2"
+# number_of_experiments = 1
+#
+# environment = get_environment(terrain_file=terrain_file, reward_val=Rewards.Spiral, state_val=States.Default, random_spawn=True)
+#
+# params = DeepQParameters(
+#             num_episodes=1500,
+#             max_steps_per_episode=100,
+#             replay_buffer_size=20000,
+#             batch_size=32,
+#
+#             learning_rate=0.001,
+#             discount_rate=0.999,
+#             target_update=25,
+#
+#             start_exploration_rate=1,
+#             max_exploration_rate=1,
+#             min_exploration_rate=0.001,
+#             exploration_decay_rate=0.005,
+#
+#             rewards_all_episodes=[],
+#             max_rewards_all_episodes=[],
+#             max_reward_average=0
+#         )
+#
+# experiment_handler = ExperimentSaveRepeat(number_of_experiments=number_of_experiments, dir_name=folder_name,
+#                                           file_name=file_name, params=params, environment=environment, start_number=1, modified_reward=False)
+# experiment_handler.start_experiments()
 
-environment = get_environment(terrain_file=terrain_file, reward_val=Rewards.Spiral, state_val=States.Default, random_spawn=True)
+
+EPISODES = 2000
+STEPS = 80
+REPLAY_BUFFER = 20000
+BATCH = 32
+
+LEARNING_RATE = 0.001
+DISCOUNT = 0.999
+UPDATE_RATE = 25
+
+
+# folder_name = "2021_04_03_spiral_first_no_reward_params"
+# file_name = "spiral_first_no_reward_params"
+# terrain_file = "test_2"
+# number_of_experiments = 20
+#
+# environment = get_environment(terrain_file=terrain_file, reward_val=Rewards.Spiral, state_val=States.Default)
+#
+# params = DeepQParameters(
+#             num_episodes=EPISODES,
+#             max_steps_per_episode=STEPS,
+#             replay_buffer_size=REPLAY_BUFFER,
+#             batch_size=BATCH,
+#
+#             learning_rate=LEARNING_RATE,
+#             discount_rate=DISCOUNT,
+#             target_update=UPDATE_RATE,
+#
+#             start_exploration_rate=1,
+#             max_exploration_rate=1,
+#             min_exploration_rate=0.001,
+#             exploration_decay_rate=0.005,
+#
+#             rewards_all_episodes=[],
+#             max_rewards_all_episodes=[],
+#             max_reward_average=0
+#         )
+#
+# experiment_handler = ExperimentSaveRepeat(number_of_experiments=number_of_experiments, dir_name=folder_name,
+#                                           file_name=file_name, params=params, environment=environment, start_number=1, modified_reward=False)
+# experiment_handler.start_experiments()
+
+
+folder_name = "2021_04_03_spiral_with_reward_params_10"
+file_name = "spiral_with_reward_params_10"
+terrain_file = "test_2"
+number_of_experiments = 20
+
+environment = get_environment(terrain_file=terrain_file, reward_val=Rewards.Spiral, state_val=States.Default)
 
 params = DeepQParameters(
-            num_episodes=1500,
-            max_steps_per_episode=100,
-            replay_buffer_size=20000,
-            batch_size=32,
+            num_episodes=EPISODES,
+            max_steps_per_episode=STEPS,
+            replay_buffer_size=REPLAY_BUFFER,
+            batch_size=BATCH,
 
-            learning_rate=0.001,
-            discount_rate=0.999,
-            target_update=25,
+            learning_rate=LEARNING_RATE,
+            discount_rate=DISCOUNT,
+            target_update=UPDATE_RATE,
 
             start_exploration_rate=1,
             max_exploration_rate=1,
