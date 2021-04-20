@@ -5,9 +5,11 @@ from plot_util import plot_comparison, plot_result, plot_mean_with_std_multiple,
 from tkinter.filedialog import askopenfilenames
 from tkinter import simpledialog
 from operator import add
+from visualization_engine_3d.engine import Rewards, States
+import gym
 
 from visualization_engine_3d.engine import Engine3D
-from visualize_util import get_reward_from_trained_net_on_environment
+from visualize_util import get_reward_from_trained_net_on_environment, get_reward_from_trained_net_on_environment_lunar_lander
 import numpy as np
 
 terrain_file = "test_2"
@@ -110,15 +112,17 @@ def compare_massive_single_results(custom_titles=False):
     plot_mean_with_std_multiple(result_datas, result_titles)
 
 
-def boxplot_massive_single_results(random_spawn, repeat_per_net=20):
+def boxplot_massive_single_results(random_spawn, repeat_per_net=5):
     result_list = []
     result_titles = []
+
+    custom_experiment_title = simpledialog.askstring(title="Enter title", prompt="Enter title for this experiment")
+    if custom_experiment_title == "":
+        custom_experiment_title = "Experiment"
 
     scale = 14
     distance = 100
     terrain = load_terrain(terrain_file)
-    world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800,
-                     random_spawn=random_spawn)
 
     Logger.input("How many data-files would you like to open?")
 
@@ -136,11 +140,13 @@ def boxplot_massive_single_results(random_spawn, repeat_per_net=20):
             result_titles.append(custom_title)
         else:
             result_titles.append(file_names[0].split("/")[-2])
+        world = Engine3D(terrain, agent_pos=(0, 0), scale=scale, distance=distance, width=800, height=800,
+                         random_spawn=random_spawn, reward_val=Rewards.Spiral, state_val=States.Default)
         Logger.status("Performing tests on " + terrain_file + "...")
         for file_name in file_names:
             learned = load_massive_result_data(file_name)
             if hasattr(learned, 'q_table'):
-                break
+                Logger.debug("Has q_table")
             elif hasattr(learned, 'trained_net'):
                 params = learned.params
                 trained_net = learned.trained_net
@@ -149,7 +155,50 @@ def boxplot_massive_single_results(random_spawn, repeat_per_net=20):
 
         result_list.append(experiment_results)
     Logger.debug(result_list)
-    plot_boxplots(result_list, result_titles)
+    plot_boxplots(result_list, result_titles, custom_experiment_title)
+
+
+def boxplot_massive_single_results_lunar_lander(repeat_per_net=10):
+    result_list = []
+    result_titles = []
+
+    custom_experiment_title = simpledialog.askstring(title="Enter title", prompt="Enter title for this experiment")
+    if custom_experiment_title == "":
+        custom_experiment_title = "Experiment"
+
+    scale = 14
+    distance = 100
+    terrain = load_terrain(terrain_file)
+
+    Logger.input("How many data-files would you like to open?")
+
+    count = simpledialog.askinteger(title="Enter count", prompt="How many experiments would you like to open?")
+
+    Logger.input("Which data-files would you like to open?")
+
+    for n in range(count):
+        file_names = askopenfilenames()
+        experiment_results = []
+        if not file_names:
+            return
+        custom_title = simpledialog.askstring(title="Enter title", prompt="Enter title for this experiment")
+        if custom_title:
+            result_titles.append(custom_title)
+        else:
+            result_titles.append(file_names[0].split("/")[-2])
+
+        env = gym.make('LunarLander-v2')
+        Logger.status("Performing tests on " + terrain_file + "...")
+        for file_name in file_names:
+            learned = load_massive_result_data(file_name)
+            params = learned.params
+            trained_net = learned.trained_net
+            for _ in range(repeat_per_net):
+                experiment_results.append(get_reward_from_trained_net_on_environment_lunar_lander(env, params, trained_net))
+
+        result_list.append(experiment_results)
+    Logger.debug(result_list)
+    plot_boxplots(result_list, result_titles, custom_experiment_title)
 
 
 def combine_results(title=""):

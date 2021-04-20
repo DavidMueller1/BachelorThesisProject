@@ -4,6 +4,8 @@ import traceback
 from pathlib import Path
 import dill
 import random
+import math
+import time
 import gym
 # from luna_test.deep_q_test import Agent
 from luna_test.deep_q_test_two_networks import Agent
@@ -13,7 +15,7 @@ from plot_util import get_current_average
 import numpy as np
 from logger import Logger
 
-TARGET_PATH = "../data/learned/new_experiments_path_luna_lander/"
+TARGET_PATH = "../data/learned/new_experiments_luna_lander/"
 
 
 class ExperimentSaveRepeatLuna:
@@ -78,10 +80,14 @@ class ExperimentSaveRepeatLuna:
                     self.env.render()
                 action = agent.choose_action(observation)
                 observation_, actual_reward, done, info = self.env.step(action)
-
-                reward = agent.epsilon * random.uniform(0.0, 5.0) + (1 - agent.epsilon) * actual_reward
+                if self.epsilon_in_reward:
+                    # reward = agent.epsilon * random.uniform(0.0, 5.0) + (1 - agent.epsilon) * actual_reward
+                    reward = (1 - agent.epsilon) * actual_reward
+                else:
+                    reward = actual_reward
 
                 score += actual_reward
+                learn_time = current_milli_time()
                 agent.store_transition(observation, action, reward, observation_, done)
                 agent.learn(episode)
                 observation = observation_
@@ -135,3 +141,7 @@ class SingleResultData:
         self.params = params
         self.single_result_data = single_result_data
         self.trained_net = trained_net
+
+
+def current_milli_time():
+    return math.floor(time.time() * 1000)

@@ -209,7 +209,8 @@ def train(width: int, length: int, params, environment, visualize=False, show_pa
             action = agent.choose_action(observation)
             state, reward, done = environment.agent_perform_action(action, is_last_action=(step + 1 == params.max_steps_per_episode))
 
-            # modified_reward = eps * 5 + (1 - eps) * reward
+            # modified_reward = (1 - eps) * reward - eps * 5
+            # modified_reward = (1 - eps) * reward + eps
             modified_reward = eps * 0 + (1 - eps) * reward
             # modified_reward = (1 - eps) * reward - eps * random.uniform(0.0, 5.0)
 

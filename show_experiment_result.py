@@ -2,8 +2,7 @@ from data_util.data_loader import load_learned_with_terrain, load_massive_result
     load_terrain
 from logger import Logger
 import plot_util
-from visualize_util import visualize_best_path
-from visualize_util import visualize_best_path_deep_q
+from visualize_util import visualize_best_path, visualize_best_path_deep_q, visualize_best_path_deep_q_luna_lander
 from plot_util import plot_progress
 from visualization_engine_3d.engine import Engine3D
 from tkinter.filedialog import askopenfilename
@@ -12,7 +11,9 @@ from data_util.experiment_data_classes import Learned
 from tkinter import *
 import numpy as np
 import time
+import gym
 from visualization_engine_3d.engine import Rewards, States
+from luna_test.deep_q_test_two_networks import Agent
 
 terrain_file = "test_2"
 
@@ -120,7 +121,17 @@ def show_experiment_result_luna_lander(repeat=True):
     file_name = askopenfilename()
     data = load_massive_single_result_data(file_name)
     Logger.status("Loaded data-file \"" + file_name + "\". Initializing renderer...")
-    plot_progress(data.params.rewards_all_episodes)
+    params = data.params
+    plot_progress(params.rewards_all_episodes)
+
+    env = gym.make('LunarLander-v2')
+    while True:
+        Logger.status("Showing best learned result...")
+        visualize_best_path_deep_q_luna_lander(env, params, data.trained_net)
+        if not repeat:
+            break
+        time.sleep(2)
+
 
         # Logger.debug("Values:", data.parameters.rewards_all_episodes)
         # while True:

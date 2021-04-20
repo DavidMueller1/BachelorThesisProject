@@ -6,6 +6,7 @@ import numpy as np
 import time
 from visualization_engine_3d.engine import Engine3D
 from tkinter import *
+import gym
 
 
 class DeepQInfos:
@@ -109,6 +110,43 @@ def visualize_best_path_deep_q(world, params: DeepQParameters, target_net):
         time.sleep(0.1)
 
 
+def visualize_best_path_deep_q_luna_lander(env, params: DeepQParameters, target_net):
+    score = 0
+    done = False
+    observation = env.reset()
+    step = 0
+    while not done:
+        step += 1
+        env.render()
+        state = T.tensor([observation]).to(target_net.device)
+        actions = target_net.forward(state)
+        action = T.argmax(actions).item()
+        observation_, actual_reward, done, info = env.step(action)
+
+        score += actual_reward
+        observation = observation_
+
+        # Logger.info('Episode', episode, 'Score %.2f' % score, 'Average score %.2f' % avg_score, 'Epsilon %.2f' % agent.epsilon)
+
+
+def get_reward_from_trained_net_on_environment_lunar_lander(env, params: DeepQParameters, target_net):
+    score = 0
+    done = False
+    observation = env.reset()
+    step = 0
+    while not done:
+        step += 1
+        state = T.tensor([observation]).to(target_net.device)
+        actions = target_net.forward(state)
+        action = T.argmax(actions).item()
+        observation_, actual_reward, done, info = env.step(action)
+
+        score += actual_reward
+        observation = observation_
+
+    return score
+
+
 def get_reward_from_trained_net_on_environment(world, params: DeepQParameters, target_net):
     world.reset_agent()
     state = world.get_state_for_deep_q()
@@ -128,5 +166,4 @@ def get_reward_from_trained_net_on_environment(world, params: DeepQParameters, t
         reward_sum += reward
         if done:
             break
-
     return reward_sum
